@@ -1,19 +1,20 @@
-import express, { request, response } from "express";
+import express from "express";
 import routes from "./routes/index.mjs";
 import cookieParser from "cookie-parser";
 import session from "express-session";
-import passport from "passport";
 import mongoose from "mongoose";
 import MongoStore from "connect-mongo";
 import cors from "cors";
 import dotenv from "dotenv";
 
-dotenv.config();
+import passport from "./utils/passport-setup.mjs";
 
-// import "./strategies/local-strategy.mjs";
-// import "./strategies/discord-strategy.mjs";
-// import "./strategies/github-strategy.mjs";
+import "./strategies/local-strategy.mjs";
+import "./strategies/discord-strategy.mjs";
+import "./strategies/github-strategy.mjs";
 import "./strategies/google-strategy.mjs";
+
+dotenv.config();
 
 const app = express();
 
@@ -51,11 +52,13 @@ app.use(routes);
 
 // The request handler function is called by serializeUser
 app.post("/api/auth", passport.authenticate("local"), (request, response) => {
-  response.sendStatus(200);
+  response.status(200).json(request.user);
+  //response.redirect(`${process.env.CLIENT_URL}/feed`);
   console.log(`Inside /auth endpoint`);
   console.log(request.user);
 });
 
+// modify this endpoint, it sends back the password
 app.get("/api/auth/status", (request, response) => {
   console.log(`Inside /auth/status endpoint`);
   return request.user ? response.json(request.user) : response.sendStatus(401);
@@ -69,28 +72,22 @@ app.post("/api/auth/logout", (request, response) => {
   });
 });
 
-/*
-
 app.get("/api/auth/discord", passport.authenticate("discord"));
 app.get(
   "/api/auth/discord/redirect",
   passport.authenticate("discord"),
   (request, response) => {
     console.log(request.session);
-    console.log(request.user);
-    response.sendStatus(200);
+    response.redirect(`${process.env.CLIENT_URL}/feed`);
   }
 );
-
-*/
 
 app.get("/api/auth/github", passport.authenticate("github"));
 app.get(
   "/api/auth/github/redirect",
   passport.authenticate("github"),
   (request, response) => {
-    console.log("inside auth");
-    response.status(200).json(request.user);
+    response.redirect(`${process.env.CLIENT_URL}/feed`);
   }
 );
 
@@ -99,8 +96,7 @@ app.get(
   "/api/auth/google/redirect",
   passport.authenticate("google"),
   (request, response) => {
-    console.log("inside auth google");
-    response.redirect(`${process.env.CLIENT_URL}/home`);
+    response.redirect(`${process.env.CLIENT_URL}/feed`);
   }
 );
 

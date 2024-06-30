@@ -2,25 +2,9 @@ import passport from "passport";
 import { Strategy } from "passport-github2";
 import dotenv from "dotenv";
 
-import { GithubUser } from "../mongoose/schemas/github-user.mjs";
+import { GitHubUser } from "../mongoose/schemas/users.mjs";
 
 dotenv.config();
-
-passport.serializeUser((user, done) => {
-  console.log(`Inside serialize user`);
-  console.log(user);
-  done(null, user.id);
-});
-
-passport.deserializeUser(async (id, done) => {
-  try {
-    const findUser = await GithubUser.findById(id);
-
-    return findUser ? done(null, findUser) : done(null, null);
-  } catch (error) {
-    done(error, null);
-  }
-});
 
 export default passport.use(
   new Strategy(
@@ -31,17 +15,18 @@ export default passport.use(
       scope: ["read:user"],
     },
     async (accessToken, refreshToken, profile, done) => {
+      console.log(profile);
       let findUser;
 
       try {
-        findUser = await GithubUser.findOne({ githubId: profile.id });
+        findUser = await GitHubUser.findOne({ githubId: profile.id });
       } catch (err) {
         return done(err, null);
       }
 
       try {
         if (!findUser) {
-          const newUser = new GithubUser({
+          const newUser = new GitHubUser({
             username: profile.username,
             githubId: profile.id,
             avatar: profile.photos[0].value,

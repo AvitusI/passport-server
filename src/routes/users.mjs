@@ -1,25 +1,36 @@
-import express, { request, response } from 'express'
+import express from "express";
 
-import { User } from '../mongoose/schemas/user.mjs'
-import { hashPassword } from '../utils/helpers.mjs'
+import { LocalUser } from "../mongoose/schemas/users.mjs";
+import { hashPassword } from "../utils/helpers.mjs";
+import {
+  allUsers,
+  followUser,
+  unfollowUser,
+  getUser,
+} from "../controllers/userController.mjs";
 
-export const router = express.Router()
+export const router = express.Router();
 
 router.post("/api/users", async (request, response) => {
-    const { body } = request
-    console.log(body)
-    body.password = hashPassword(body.password)
-    console.log(body)
-    const newUser = new User(body)
-    
-    try {
-        const savedUser = await newUser.save()
-        return response.status(201).send(savedUser)
-    }
-    catch (err) {
-        console.log(err)
-        return response.sendStatus(400)
-    }
-})
+  const { body } = request;
+  body.password = hashPassword(body.password);
+  const newUser = new LocalUser(body);
 
-export default router
+  try {
+    const savedUser = await newUser.save();
+    return response.status(201).send(savedUser);
+  } catch (err) {
+    console.log(err);
+    return response.sendStatus(400);
+  }
+});
+
+router.get("/api/users", allUsers);
+
+router.post("/api/users/:id/follow", followUser);
+
+router.post("/api/users/:id/unfollow", unfollowUser);
+
+router.get("/api/users/:userId", getUser);
+
+export default router;

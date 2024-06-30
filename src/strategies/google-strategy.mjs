@@ -2,24 +2,9 @@ import passport from "passport";
 import { Strategy } from "passport-google-oauth20";
 import dotenv from "dotenv";
 
-import { GoogleUser } from "../mongoose/schemas/google-user.mjs";
+import { GoogleUser } from "../mongoose/schemas/users.mjs";
 
 dotenv.config();
-
-passport.serializeUser((user, done) => {
-  console.log(`Inside serialize user`);
-  done(null, user.id);
-});
-
-passport.deserializeUser(async (id, done) => {
-  try {
-    const findUser = await GoogleUser.findById(id);
-
-    return findUser ? done(null, findUser) : done(null, null);
-  } catch (err) {
-    done(err, null);
-  }
-});
 
 export default passport.use(
   new Strategy(

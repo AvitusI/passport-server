@@ -1,22 +1,10 @@
 import passport from "passport";
 import { Strategy } from "passport-discord";
-import { DiscordUser } from "../mongoose/schemas/discord-user.mjs";
+import dotenv from "dotenv";
 
-passport.serializeUser((user, done) => {
-  console.log(`Inside serialize user`);
-  console.log(user);
-  done(null, user.id);
-});
+import { DiscordUser } from "../mongoose/schemas/users.mjs";
 
-passport.deserializeUser(async (id, done) => {
-  try {
-    const findUser = await DiscordUser.findById(id);
-
-    return findUser ? done(null, findUser) : done(null, null);
-  } catch (error) {
-    done(error, null);
-  }
-});
+dotenv.config();
 
 export default passport.use(
   new Strategy(
@@ -28,6 +16,7 @@ export default passport.use(
     },
     async (accessToken, refreshToken, profile, done) => {
       let findUser;
+      console.log(profile);
       try {
         findUser = await DiscordUser.findOne({ discordId: profile.id });
       } catch (err) {
@@ -39,6 +28,7 @@ export default passport.use(
           const newUser = new DiscordUser({
             username: profile.username,
             discordId: profile.id,
+            avatar: `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.png`,
           });
 
           const newSavedUser = await newUser.save();
