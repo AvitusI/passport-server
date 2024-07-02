@@ -1,4 +1,7 @@
 import express from "express";
+import http from "http";
+import { Server } from "socket.io";
+
 import routes from "./routes/index.mjs";
 import cookieParser from "cookie-parser";
 import session from "express-session";
@@ -100,8 +103,36 @@ app.get(
   }
 );
 
+const server = http.createServer(app);
+
+const io = new Server(server, {
+  cors: {
+    origin: process.env.CLIENT_URL,
+    methods: ["GET", "POST"],
+  },
+});
+
+io.on("connection", (socket) => {
+  console.log(`User connected ${socket.id}`);
+
+  socket.on("join_chat", (chatId) => {
+    socket.join(chatId);
+    console.log(`User joined chat ${chatId}`);
+  });
+
+  socket.on("send_message", (message) => {
+    console.log(message.content, message.chatId);
+
+    socket.to(message.chatId).emit("receive_message", message);
+  });
+
+  socket.on("disconnect", () => {
+    console.log("user disconnected");
+  });
+});
+
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Running on Port ${PORT}`);
 });

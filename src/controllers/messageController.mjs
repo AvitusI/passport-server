@@ -10,6 +10,7 @@ export const sendMessage = asyncHandler(async (request, response) => {
   }
 
   const { content, chatId } = request.body;
+  console.log(request.body);
 
   if (!content || !chatId) {
     return response.status(400).json("Cannot send empty message");
@@ -43,6 +44,7 @@ export const sendMessage = asyncHandler(async (request, response) => {
     });
 
     const populatedMessage = await populateMessage;
+
     const users = populatedMessage.chat.users;
 
     const userId = users.filter((user) => user.id !== request.user.id)[0];
