@@ -1,7 +1,6 @@
 import express from "express";
+import passport from "passport";
 
-import { LocalUser } from "../mongoose/schemas/users.mjs";
-import { hashPassword } from "../utils/helpers.mjs";
 import {
   allUsers,
   followUser,
@@ -9,9 +8,18 @@ import {
   getUser,
 } from "../controllers/userController.mjs";
 
+import "../strategies/local-strategy-signup.mjs";
+
 export const router = express.Router();
 
-router.post("/api/users", async (request, response) => {
+router.post(
+  "/api/users/activateAccount",
+  passport.authenticate("local-signup"),
+  (request, response) => {
+    response.status(200).json(request.user);
+  }
+  /*
+  async (request, response) => {
   const { body } = request;
   body.password = hashPassword(body.password);
   const newUser = new LocalUser(body);
@@ -23,7 +31,8 @@ router.post("/api/users", async (request, response) => {
     console.log(err);
     return response.sendStatus(400);
   }
-});
+} */
+);
 
 router.get("/api/users", allUsers);
 
