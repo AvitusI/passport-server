@@ -25,12 +25,30 @@ const baseTokenSchema = new mongoose.Schema(
 
 export const Token = mongoose.model("Token", baseTokenSchema);
 
+const ActivateAccountTokenSchema = new mongoose.Schema({});
+
 export const ActivateAccountToken = Token.discriminator(
   "ActivateAccountToken",
-  new mongoose.Schema({})
+  ActivateAccountTokenSchema
 );
+
+ActivateAccountTokenSchema.post("remove", async function (doc) {
+  try {
+    const user = await mongoose.model("User").findById(doc.userId);
+
+    // Check if the user exists and is not activated
+    if (user && !user.active) {
+      await user.deleteOne();
+      console.log(`Unactivated user with ID ${doc.userId} deleted.`);
+    }
+  } catch (err) {
+    console.error(`Error deleting the user with ID ${doc.userId}: `, err);
+  }
+});
+
+const ResetPasswordTokenSchema = new mongoose.Schema({});
 
 export const ResetPasswordToken = Token.discriminator(
   "ResetPasswordToken",
-  new mongoose.Schema({})
+  ResetPasswordTokenSchema
 );

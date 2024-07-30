@@ -7,14 +7,14 @@ import { User } from "../mongoose/schemas/users.mjs";
 import { UserFeed } from "../mongoose/schemas/feed.mjs";
 
 export const savePost = asyncHandler(async (request, response) => {
-  const { title, content } = request.body;
+  const { content } = request.body;
 
   if (!request.user) {
-    return response.status(401).send("Unauthorized");
+    return response.status(401).json("Unauthorized");
   }
 
-  if (!title || !content) {
-    return response.status(400).send("Title and content are required");
+  if (!content) {
+    return response.status(400).json("content is required");
   }
 
   const newPost = new Post({

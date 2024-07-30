@@ -1,7 +1,7 @@
 import asyncHandler from "express-async-handler";
 
 import { Message } from "../mongoose/schemas/message.mjs";
-import { MessageNotification } from "../mongoose/schemas/notifications.mjs";
+import { messageNotification } from "../mongoose/schemas/messageNotification.mjs";
 import { Chat } from "../mongoose/schemas/chat.mjs";
 
 export const sendMessage = asyncHandler(async (request, response) => {
@@ -50,11 +50,11 @@ export const sendMessage = asyncHandler(async (request, response) => {
     const userId = users.filter((user) => user.id !== request.user.id)[0];
 
     // flaw, doesn't work, // it works
-    const notification = await MessageNotification({
+    const notification = await messageNotification({
       userId,
-      message: `${request.user.username} sent you a message`,
       messageId: populatedMessage.id,
       senderId: request.user.id,
+      chatId,
     });
 
     await notification.save();

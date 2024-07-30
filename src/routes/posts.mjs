@@ -11,8 +11,6 @@ import {
   getPost,
 } from "../controllers/postController.mjs";
 
-import { accessChat } from "../controllers/chatController.mjs"; //
-
 const router = express.Router();
 
 router.post("/api/posts", savePost);

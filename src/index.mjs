@@ -1,6 +1,7 @@
 import express from "express";
 import http from "http";
 import { Server } from "socket.io";
+import fileUpload from "express-fileupload";
 
 import routes from "./routes/index.mjs";
 import cookieParser from "cookie-parser";
@@ -34,6 +35,7 @@ app.use(
   })
 );
 app.use(cookieParser("helloworld"));
+app.use(fileUpload());
 app.use(
   session({
     secret: "avitus the dev", // make it not guessable

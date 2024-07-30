@@ -1,13 +1,67 @@
 import asyncHandler from "express-async-handler";
+import crypto from "crypto";
+import bcrypt from "bcrypt";
 
-import { User } from "../mongoose/schemas/users.mjs";
+import { User, LocalUser } from "../mongoose/schemas/users.mjs";
+import { ActivateAccountToken } from "../mongoose/schemas/token.mjs";
 import { FollowNotification } from "../mongoose/schemas/notifications.mjs";
 import { UserFeed } from "../mongoose/schemas/feed.mjs";
 import { Post } from "../mongoose/schemas/post.mjs";
+import { hashPassword } from "../utils/helpers.mjs";
+import { sendEmail } from "../utils/email/sendEmail.mjs";
+import {
+  requestPasswordReset,
+  resetPassword,
+} from "../passwordService/resetPassword.mjs";
+
+export const registerUser = asyncHandler(async (request, response) => {
+  const { body } = request;
+
+  try {
+    const user = await User.findOne({ email: body.email });
+
+    if (user) {
+      return response.status(400).json({ message: "user already exist" });
+    }
+
+    body.password = hashPassword(body.password);
+
+    const newUser = new LocalUser(body);
+
+    const savedUser = await newUser.save();
+
+    let activateToken = crypto.randomBytes(32).toString("hex");
+
+    const hash = await bcrypt.hash(
+      activateToken,
+      Number(process.env.BCRYPT_SALT)
+    );
+
+    await new ActivateAccountToken({
+      userId: savedUser._id,
+      token: hash,
+      createdAt: Date.now(),
+    }).save();
+
+    const link = `${process.env.CLIENT_URL}/accountActivate?token=${activateToken}&id=${savedUser._id}`;
+
+    sendEmail(
+      savedUser.email,
+      "Account Activation Request",
+      { name: savedUser.username, link: link },
+      "activateAccount.handlebars"
+    );
+
+    return response.status(200).json(link);
+  } catch (err) {
+    console.error(err);
+    return response.sendStatus(400);
+  }
+});
 
 export const allUsers = asyncHandler(async (request, response) => {
   if (!request.user) {
-    return response.status(401).send("Unauthorized");
+    return response.status(401).json("Unauthorized");
   }
 
   try {
@@ -15,7 +69,7 @@ export const allUsers = asyncHandler(async (request, response) => {
       "followers",
       "_id username -strategy"
     );
-    return response.status(200).send(users);
+    return response.status(200).json(users);
   } catch (error) {
     return response.sendStatus(400);
   }
@@ -127,3 +181,25 @@ export const unfollowUser = asyncHandler(async (request, response) => {
     return response.sendStatus(400);
   }
 });
+
+export const resetPasswordRequestController = asyncHandler(
+  async (request, response) => {
+    const requestPasswordResetService = await requestPasswordReset(
+      request.body.email
+    );
+
+    return response.json(requestPasswordResetService);
+  }
+);
+
+export const resetPasswordController = asyncHandler(
+  async (request, response) => {
+    const resetPasswordService = await resetPassword(
+      request.body.userId,
+      request.body.token,
+      request.body.password
+    );
+
+    return response.json(resetPasswordService);
+  }
+);

@@ -60,22 +60,6 @@ export const LikeNotification = Notification.discriminator(
   })
 );
 
-export const MessageNotification = Notification.discriminator(
-  "MessageNotification",
-  new mongoose.Schema({
-    senderId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
-    messageId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Message",
-      required: true,
-    },
-  })
-);
-
 export const PostNotification = Notification.discriminator(
   "PostNotification",
   new mongoose.Schema({

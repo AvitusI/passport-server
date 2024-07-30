@@ -1,8 +1,10 @@
 import passport from "passport";
 import { Strategy } from "passport-local";
+import bcrypt from "bcrypt";
 
-import { LocalUser, User } from "../mongoose/schemas/users.mjs";
-import { hashPassword } from "../utils/helpers.mjs";
+import { User, LocalUser } from "../mongoose/schemas/users.mjs";
+import { Token } from "../mongoose/schemas/token.mjs";
+import { sendEmail } from "../utils/email/sendEmail.mjs";
 
 passport.serializeUser((user, done) => {
   // Store user in session
@@ -22,36 +24,60 @@ export default passport.use(
   "local-signup",
   new Strategy(
     {
-      usernameField: "email",
-      passwordField: "password",
+      usernameField: "userId",
+      passwordField: "token",
       passReqToCallback: true,
     },
-    async (request, email, password, done) => {
-      const { username } = request.body;
+    async (request, userId, token, done) => {
+      //const { userId, token } = request.body;
+      console.log(request.body);
 
-      if (!username || !email || !password) {
-        done(new Error("all credentials are required"), null);
+      if (!userId || !token) {
+        done(new Error("userId and token required"), null);
       }
-
-      const userByEmail = await User.findOne({ email });
-
-      if (userByEmail) {
-        done(new Error("email already exist"), null);
-      }
-
-      const hashedPassword = hashPassword(password);
-
-      const newUser = new LocalUser({
-        username,
-        email,
-        password: hashedPassword,
-      });
 
       try {
-        const savedUser = await newUser.save();
+        let accountActivateToken = await Token.findOne({
+          userId,
+          type: "ActivateAccountToken",
+        });
 
-        done(null, savedUser);
+        if (!accountActivateToken) {
+          done(new Error("Invalid or expired password reset token"), null);
+        }
+
+        const isValid = await bcrypt.compare(token, accountActivateToken.token);
+
+        if (!isValid) {
+          done(new Error("Invalid or expired password reset token"), null);
+        }
+
+        const activatedUser = await LocalUser.findByIdAndUpdate(
+          userId,
+          { active: true },
+          { new: true }
+        );
+
+        if (!activatedUser) {
+          return done(new Error("User not found"), null);
+        }
+
+        sendEmail(
+          activatedUser.email,
+          "Account Activated Successfully",
+          {
+            name: activatedUser.username,
+          },
+          "welcome.handlebars"
+        );
+
+        await accountActivateToken.deleteOne();
+
+        console.log(activatedUser);
+
+        done(null, activatedUser);
       } catch (error) {
+        console.error(error);
         done(error, null);
       }
     }

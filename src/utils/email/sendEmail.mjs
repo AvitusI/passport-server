@@ -2,9 +2,11 @@ import nodemailer from "nodemailer";
 import handlebars from "handlebars";
 import fs from "fs";
 import path from "path";
+import { fileURLToPath } from "url";
 
 export const sendEmail = async (email, subject, payload, template) => {
   try {
+    console.log(process.env.EMAIL_USERNAME);
     const transporter = nodemailer.createTransport({
       service: "Gmail",
       port: 465,
@@ -13,6 +15,9 @@ export const sendEmail = async (email, subject, payload, template) => {
         pass: process.env.EMAIL_PASSWORD,
       },
     });
+
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = path.dirname(__filename);
 
     const source = fs.readFileSync(
       path.join(__dirname, "template", template),
@@ -32,7 +37,7 @@ export const sendEmail = async (email, subject, payload, template) => {
 
     transporter.sendMail(options(), (error, info) => {
       if (error) {
-        return error;
+        return error.message;
       } else {
         return res.status(200).json({ success: true });
       }
@@ -40,6 +45,6 @@ export const sendEmail = async (email, subject, payload, template) => {
 
     console.log("mail sent successfully");
   } catch (error) {
-    console.error("mail fail to send");
+    console.error(error);
   }
 };

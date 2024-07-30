@@ -2,10 +2,6 @@ import mongoose from "mongoose";
 
 const PostSchema = new mongoose.Schema(
   {
-    title: {
-      type: mongoose.Schema.Types.String,
-      required: true,
-    },
     content: {
       type: mongoose.Schema.Types.String,
       required: true,

@@ -1,6 +1,8 @@
 import asyncHandler from "express-async-handler";
 
 import { Chat } from "../mongoose/schemas/chat.mjs";
+import { Message } from "../mongoose/schemas/message.mjs";
+import { messageNotification } from "../mongoose/schemas/messageNotification.mjs";
 
 export const getChats = asyncHandler(async (request, response) => {
   if (!request.user) {

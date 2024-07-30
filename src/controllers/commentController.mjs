@@ -44,15 +44,17 @@ export const createComment = asyncHandler(async (request, response) => {
         },
       });
 
-    const notification = new CommentNotification({
-      userId: commentedPost.author._id,
-      message: `${request.user.username} commented on your post`,
-      postId,
-      commentId: savedComment.id,
-      commenterId: request.user.id,
-    });
+    if (!commentedPost.author._id.equals(request.user._id)) {
+      const notification = new CommentNotification({
+        userId: commentedPost.author._id,
+        message: `${request.user.username} commented on your post`,
+        postId,
+        commentId: savedComment.id,
+        commenterId: request.user.id,
+      });
 
-    await notification.save();
+      await notification.save();
+    }
 
     return response.status(200).json(commentedPost);
   } catch (error) {
