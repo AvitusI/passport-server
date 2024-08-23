@@ -15,10 +15,16 @@ export const getUserFeed = asyncHandler(async (request, response) => {
       userId: request.user._id,
     }).populate({
       path: "posts",
-      populate: {
-        path: "author",
-        select: "username avatar -strategy",
-      },
+      populate: [
+        {
+          path: "author",
+          select: "username avatar -strategy",
+        },
+        {
+          path: "likes",
+          select: "username avatar -strategy",
+        },
+      ],
     });
 
     if (!userFeed) {

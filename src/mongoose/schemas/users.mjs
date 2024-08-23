@@ -18,6 +18,9 @@ const baseUserSchema = new mongoose.Schema(
         ref: "User",
       },
     ],
+    bio: {
+      type: String,
+    },
   },
   {
     discriminatorKey: "strategy",

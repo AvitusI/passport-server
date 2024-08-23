@@ -93,8 +93,43 @@ export const getUser = asyncHandler(async (request, response) => {
   }
 });
 
+export const editProfile = asyncHandler(async (request, response) => {
+  if (!request.user) {
+    return response.status(401).send("Unauthorized");
+  }
+
+  const { userId } = request.params;
+
+  if (request.user._id.toString() !== userId) {
+    return response
+      .status(400)
+      .json("You are not authorized to edit this profile");
+  }
+
+  try {
+    const user = await User.findByIdAndUpdate(
+      userId,
+      {
+        $set: request.body,
+      },
+      {
+        new: true,
+      }
+    ).select("-password -strategy");
+
+    if (!user) {
+      return response.status(404).json("User not found");
+    }
+
+    return response.status(200).json(user);
+  } catch (error) {
+    console.error(error);
+    return response.sendStatus(400);
+  }
+});
+
 export const followUser = asyncHandler(async (request, response) => {
-  const { id } = request.params;
+  const { userId } = request.body;
 
   if (!request.user) {
     return response.status(401).send("Unauthorized");
@@ -102,7 +137,7 @@ export const followUser = asyncHandler(async (request, response) => {
 
   try {
     const userToFollow = await User.findByIdAndUpdate(
-      id,
+      userId,
       {
         $addToSet: { followers: request.user._id },
       },
@@ -110,18 +145,18 @@ export const followUser = asyncHandler(async (request, response) => {
     ).populate("followers", "_id username");
 
     if (!userToFollow) {
-      return response.status(404).send("User not found");
+      return response.status(404).json("User not found");
     }
 
     const newNotification = new FollowNotification({
-      userId: id,
+      userId: userId,
       message: `${request.user.username} started following you`,
       followerId: request.user._id,
     });
 
     await newNotification.save();
 
-    const firstFiftyPosts = await Post.find({ author: id })
+    const firstFiftyPosts = await Post.find({ author: userId })
       .sort({ createdAt: -1 })
       .limit(50);
     const postIds = firstFiftyPosts.map((post) => post._id);
@@ -139,14 +174,14 @@ export const followUser = asyncHandler(async (request, response) => {
       { new: true, upsert: true }
     );
 
-    return response.status(200).send(userToFollow);
+    return response.sendStatus(200);
   } catch (error) {
     return response.sendStatus(400);
   }
 });
 
 export const unfollowUser = asyncHandler(async (request, response) => {
-  const { id } = request.params;
+  const { userId } = request.body;
 
   if (!request.user) {
     return response.status(401).send("Unauthorized");
@@ -154,7 +189,7 @@ export const unfollowUser = asyncHandler(async (request, response) => {
 
   try {
     const userToUnfollow = await User.findByIdAndUpdate(
-      id,
+      userId,
       {
         $pull: { followers: request.user._id },
       },
@@ -165,7 +200,7 @@ export const unfollowUser = asyncHandler(async (request, response) => {
       return response.status(404).send("User not found");
     }
 
-    const postToRemove = await Post.find({ author: id });
+    const postToRemove = await Post.find({ author: userId });
     const postIds = postToRemove.map((post) => post._id);
 
     await UserFeed.updateOne(
@@ -176,7 +211,7 @@ export const unfollowUser = asyncHandler(async (request, response) => {
       { new: true }
     );
 
-    return response.status(200).send(userToUnfollow);
+    return response.sendStatus(200);
   } catch (error) {
     return response.sendStatus(400);
   }

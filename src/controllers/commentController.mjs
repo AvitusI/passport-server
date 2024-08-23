@@ -172,7 +172,9 @@ export const allComments = asyncHandler(async (request, response) => {
   const { postId } = request.params;
 
   try {
-    const comments = await Comment.find({ postId }).populate("postId");
+    const comments = await Comment.find({ postId })
+      .populate("postId")
+      .populate("likes");
 
     return response.status(200).json(comments);
   } catch (error) {
@@ -185,7 +187,7 @@ export const likeComment = asyncHandler(async (request, response) => {
     return response.status(400).send("Unauthorized");
   }
 
-  const { id } = request.params;
+  const { id } = request.body;
 
   try {
     const likedComment = await Comment.findByIdAndUpdate(
@@ -207,7 +209,7 @@ export const likeComment = asyncHandler(async (request, response) => {
 
     await notification.save();
 
-    return response.status(200).json(likedComment);
+    return response.sendStatus(200);
   } catch (error) {
     return response.sendStatus(400);
   }
@@ -218,7 +220,7 @@ export const unlikeComment = asyncHandler(async (request, response) => {
     return response.status(400).send("Unauthorized");
   }
 
-  const { id } = request.params;
+  const { id } = request.body;
 
   try {
     const unlikedComment = await Comment.findByIdAndUpdate(
@@ -231,7 +233,7 @@ export const unlikeComment = asyncHandler(async (request, response) => {
       .populate("userId", "-password")
       .populate("likes", "-password");
 
-    return response.status(200).json(unlikedComment);
+    return response.sendStatus(200);
   } catch (error) {
     return response.sendStatus(400);
   }

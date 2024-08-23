@@ -19,7 +19,7 @@ router.delete("/api/posts/:id", deletePost);
 router.get("/api/posts", allPosts);
 router.get("/api/posts/user/:userId", getPostsByUser);
 router.get("/api/posts/:id", getPost);
-router.post("/api/posts/:id/like", likePost);
-router.post("/api/posts/:id/unlike", unlikePost);
+router.post("/api/posts/like", likePost);
+router.post("/api/posts/unlike", unlikePost);
 
 export default router;

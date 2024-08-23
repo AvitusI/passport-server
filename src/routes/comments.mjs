@@ -17,7 +17,7 @@ router.get("/api/comments/:userId", getCommentsByUser);
 router.put("/api/comments/:id", editComment);
 router.delete("/api/comments/:id", deleteComment);
 router.get("/api/:postId/comments", allComments);
-router.post("/api/comments/:id/like", likeComment);
-router.post("/api/comments/:id/unlike", unlikeComment);
+router.post("/api/comments/like", likeComment);
+router.post("/api/comments/unlike", unlikeComment);
 
 export default router;

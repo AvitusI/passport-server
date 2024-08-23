@@ -6,6 +6,7 @@ import {
   followUser,
   unfollowUser,
   getUser,
+  editProfile,
   registerUser,
   resetPasswordController,
   resetPasswordRequestController,
@@ -29,11 +30,13 @@ router.post("/api/users", registerUser);
 
 router.get("/api/users", allUsers);
 
-router.post("/api/users/:id/follow", followUser);
+router.post("/api/users/follow", followUser);
 
-router.post("/api/users/:id/unfollow", unfollowUser);
+router.post("/api/users/unfollow", unfollowUser);
 
 router.get("/api/users/:userId", getUser);
+
+router.put("/api/users/:userId", editProfile);
 
 router.post("/api/users/requestResetPassword", resetPasswordRequestController);
 

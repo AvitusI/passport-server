@@ -77,14 +77,14 @@ export const savePost = asyncHandler(async (request, response) => {
 
 export const editPost = asyncHandler(async (request, response) => {
   if (!request.user) {
-    return response.status(401).send("Unauthorized");
+    return response.status(401).json("Unauthorized");
   }
 
-  const { title, content } = request.body;
+  const { content } = request.body;
   const { id } = request.params;
 
-  if (!title || !content) {
-    return response.status(400).send("Title and content are required");
+  if (!content) {
+    return response.status(400).json("Content is required");
   }
 
   try {
@@ -178,10 +178,16 @@ export const getPost = asyncHandler(async (request, response) => {
     const post = await Post.findById(id)
       .populate({
         path: "comments",
-        populate: {
-          path: "userId",
-          select: "-password -strategy",
-        },
+        populate: [
+          {
+            path: "userId",
+            select: "-password -strategy",
+          },
+          {
+            path: "likes",
+            select: "-password -strategy",
+          },
+        ],
       })
       .populate("likes", "-password")
       .populate("author", "-password");
@@ -221,7 +227,7 @@ export const likePost = asyncHandler(async (request, response) => {
     return response.status(400).send("Unauthorized");
   }
 
-  const { id } = request.params;
+  const { id } = request.body;
 
   try {
     const post = await Post.findByIdAndUpdate(
@@ -245,7 +251,7 @@ export const likePost = asyncHandler(async (request, response) => {
 
     await notification.save();
 
-    return response.status(200).json(post);
+    return response.sendStatus(200);
   } catch (error) {
     return response.sendStatus(400);
   }
@@ -256,7 +262,7 @@ export const unlikePost = asyncHandler(async (request, response) => {
     return response.status(400).send("Unauthorized");
   }
 
-  const { id } = request.params;
+  const { id } = request.body;
 
   try {
     const post = await Post.findByIdAndUpdate(
@@ -267,7 +273,7 @@ export const unlikePost = asyncHandler(async (request, response) => {
       { new: true }
     ).populate("likes", "-_id -password");
 
-    return response.status(200).json(post);
+    return response.sendStatus(200);
   } catch (error) {
     return response.sendStatus(400);
   }
