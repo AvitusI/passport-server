@@ -156,10 +156,10 @@ export const followUser = asyncHandler(async (request, response) => {
 
     await newNotification.save();
 
-    const firstFiftyPosts = await Post.find({ author: userId })
+    const firstFifteenPosts = await Post.find({ author: userId })
       .sort({ createdAt: -1 })
-      .limit(50);
-    const postIds = firstFiftyPosts.map((post) => post._id);
+      .limit(15);
+    const postIds = firstFifteenPosts.map((post) => post._id);
 
     await UserFeed.findOneAndUpdate(
       { userId: request.user._id },
@@ -199,6 +199,11 @@ export const unfollowUser = asyncHandler(async (request, response) => {
     if (!userToUnfollow) {
       return response.status(404).send("User not found");
     }
+
+    await FollowNotification.findOneAndDelete({
+      followerId: request.user.id,
+      userId,
+    });
 
     const postToRemove = await Post.find({ author: userId });
     const postIds = postToRemove.map((post) => post._id);

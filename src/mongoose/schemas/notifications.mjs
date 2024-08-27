@@ -43,9 +43,8 @@ export const FollowNotification = Notification.discriminator(
   })
 );
 
-// This notification model is shared between Post and Comment
-export const LikeNotification = Notification.discriminator(
-  "LikeNotification",
+export const LikePostNotification = Notification.discriminator(
+  "LikePostNotification",
   new mongoose.Schema({
     postId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -60,15 +59,15 @@ export const LikeNotification = Notification.discriminator(
   })
 );
 
-export const PostNotification = Notification.discriminator(
-  "PostNotification",
+export const LikeCommentNotification = Notification.discriminator(
+  "LikeCommentNotification",
   new mongoose.Schema({
-    postId: {
+    commentId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Post", //Post
+      ref: "Comment", // Comment
       required: true,
     },
-    authorId: {
+    likerId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,

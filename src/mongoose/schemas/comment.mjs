@@ -1,6 +1,8 @@
 import mongoose from "mongoose";
+import { LikeCommentNotification } from "./notifications.mjs";
+import { CommentNotification } from "./notifications.mjs";
 
-const CommentModel = new mongoose.Schema(
+const CommentSchema = new mongoose.Schema(
   {
     content: {
       type: mongoose.Schema.Types.String,
@@ -28,4 +30,18 @@ const CommentModel = new mongoose.Schema(
   }
 );
 
-export const Comment = mongoose.model("Comment", CommentModel);
+CommentSchema.post("findOneAndDelete", async function (comment) {
+  if (comment) {
+    await LikeCommentNotification.deleteMany({ commentId: comment._id });
+    console.log("Comment deleted with its associated likes");
+  }
+});
+
+CommentSchema.post("findOneAndDelete", async function (comment) {
+  if (comment) {
+    await CommentNotification.deleteMany({ commentId: comment._id });
+    console.log("Comment deleted together with its notifications");
+  }
+});
+
+export const Comment = mongoose.model("Comment", CommentSchema);

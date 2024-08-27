@@ -13,10 +13,12 @@ export const allNotification = asyncHandler(async (request, response) => {
   const { userId } = request.params;
 
   try {
-    const notifications = await Notification.find({ userId }).populate(
-      "userId",
-      "-password"
-    );
+    const notifications = await Notification.find({ userId })
+      .populate("userId", "-password")
+      .populate("commentId")
+      .populate("followerId")
+      .populate("likerId")
+      .populate("commenterId");
 
     return response.status(200).json(notifications);
   } catch (error) {

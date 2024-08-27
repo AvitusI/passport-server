@@ -8,6 +8,7 @@ import messagesRouter from "./messages.mjs";
 import notificationsRouter from "./notifications.mjs";
 import userFeedRouter from "./feeds.mjs";
 import imageUploadRouter from "./cloudinary.route.mjs";
+import mediaRetrieveRouter from "./media.mjs";
 
 const router = Router();
 
@@ -19,5 +20,6 @@ router.use(messagesRouter);
 router.use(notificationsRouter);
 router.use(userFeedRouter);
 router.use(imageUploadRouter);
+router.use(mediaRetrieveRouter);
 
 export default router;

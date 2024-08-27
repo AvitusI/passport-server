@@ -6,7 +6,6 @@ import { fileURLToPath } from "url";
 
 export const sendEmail = async (email, subject, payload, template) => {
   try {
-    console.log(process.env.EMAIL_USERNAME);
     const transporter = nodemailer.createTransport({
       service: "Gmail",
       port: 465,

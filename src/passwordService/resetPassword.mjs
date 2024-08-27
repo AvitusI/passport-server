@@ -28,7 +28,7 @@ export const requestPasswordReset = async (email) => {
       createdAt: Date.now(),
     }).save();
 
-    const link = `${process.env.CLIENT_URL}/passwordReset?token=${resetToken}&id=${user._id}`;
+    const link = `http://localhost:3000/resetPassword?token=${resetToken}&id=${user._id}`;
 
     sendEmail(
       user.email,

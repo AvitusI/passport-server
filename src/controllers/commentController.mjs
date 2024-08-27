@@ -4,7 +4,7 @@ import { Comment } from "../mongoose/schemas/comment.mjs";
 import { Post } from "../mongoose/schemas/post.mjs";
 import {
   CommentNotification,
-  LikeNotification,
+  LikeCommentNotification,
 } from "../mongoose/schemas/notifications.mjs";
 
 export const createComment = asyncHandler(async (request, response) => {
@@ -200,10 +200,10 @@ export const likeComment = asyncHandler(async (request, response) => {
       .populate("userId", "-password")
       .populate("likes", "-password");
 
-    const notification = new LikeNotification({
+    const notification = new LikeCommentNotification({
       userId: likedComment.userId.id,
       message: `${request.user.username} liked your comment`,
-      postId: likedComment.id,
+      commentId: likedComment.id,
       likerId: request.user.id,
     });
 
@@ -232,6 +232,11 @@ export const unlikeComment = asyncHandler(async (request, response) => {
     )
       .populate("userId", "-password")
       .populate("likes", "-password");
+
+    await LikeCommentNotification.findOneAndDelete({
+      likerId: request.user.id,
+      commentId: unlikedComment.id,
+    });
 
     return response.sendStatus(200);
   } catch (error) {

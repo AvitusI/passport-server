@@ -1,8 +1,7 @@
 import asyncHandler from "express-async-handler";
 
 import { Post } from "../mongoose/schemas/post.mjs";
-import { PostNotification } from "../mongoose/schemas/notifications.mjs";
-import { LikeNotification } from "../mongoose/schemas/notifications.mjs";
+import { LikePostNotification } from "../mongoose/schemas/notifications.mjs";
 import { User } from "../mongoose/schemas/users.mjs";
 import { UserFeed } from "../mongoose/schemas/feed.mjs";
 
@@ -43,6 +42,8 @@ export const savePost = asyncHandler(async (request, response) => {
     );
 
     retrieveAuthor.followers.forEach(async (follower) => {
+      /* Not a typical functionality for a social network platform  */
+      /*
       const notification = new PostNotification({
         userId: follower._id,
         message: `${request.user.username} made a new post`,
@@ -51,6 +52,7 @@ export const savePost = asyncHandler(async (request, response) => {
       });
 
       await notification.save();
+      */
 
       await UserFeed.updateOne(
         { userId: follower.id },
@@ -242,7 +244,7 @@ export const likePost = asyncHandler(async (request, response) => {
       return response.status(404).send("Post not found");
     }
 
-    const notification = new LikeNotification({
+    const notification = new LikePostNotification({
       userId: post.author,
       message: `${request.user.username} liked your post`,
       postId: post._id,
@@ -272,6 +274,11 @@ export const unlikePost = asyncHandler(async (request, response) => {
       },
       { new: true }
     ).populate("likes", "-_id -password");
+
+    await LikePostNotification.findOneAndDelete({
+      likerId: request.user.id,
+      postId: post.id,
+    });
 
     return response.sendStatus(200);
   } catch (error) {
