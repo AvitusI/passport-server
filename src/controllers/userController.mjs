@@ -184,7 +184,7 @@ export const unfollowUser = asyncHandler(async (request, response) => {
   const { userId } = request.body;
 
   if (!request.user) {
-    return response.status(401).send("Unauthorized");
+    return response.status(401).json("Unauthorized");
   }
 
   try {
@@ -219,6 +219,55 @@ export const unfollowUser = asyncHandler(async (request, response) => {
     return response.sendStatus(200);
   } catch (error) {
     return response.sendStatus(400);
+  }
+});
+
+export const searchUser = asyncHandler(async (request, response) => {
+  /*
+  if (!request.user) {
+    return response.json("Unauthorized");
+  } */
+
+  try {
+    const { username } = request.query;
+
+    const agg = [
+      {
+        $search: {
+          autocomplete: {
+            query: username,
+            path: "username",
+            fuzzy: {
+              maxEdits: 2,
+            },
+          },
+        },
+      },
+      {
+        $limit: 5,
+      },
+      {
+        $unset: [
+          "followers",
+          "bio",
+          "email",
+          "password",
+          "active",
+          "googleId",
+          "githubId",
+          "discordId",
+          "strategy",
+          "__v",
+        ],
+      },
+    ];
+
+    const result = await User.aggregate(agg);
+
+    return response.json(result);
+  } catch (error) {
+    console.error(error);
+    return response.json({});
   }
 });
 

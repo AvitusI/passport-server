@@ -10,6 +10,7 @@ import {
   registerUser,
   resetPasswordController,
   resetPasswordRequestController,
+  searchUser,
 } from "../controllers/userController.mjs";
 
 import "../strategies/local-strategy-signup.mjs";
@@ -33,6 +34,8 @@ router.get("/api/users", allUsers);
 router.post("/api/users/follow", followUser);
 
 router.post("/api/users/unfollow", unfollowUser);
+
+router.get("/api/users/search", searchUser);
 
 router.get("/api/users/:userId", getUser);
 

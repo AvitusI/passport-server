@@ -22,8 +22,10 @@ dotenv.config();
 
 const app = express();
 
+// mongodb://localhost/express-tutorial
+
 mongoose
-  .connect("mongodb://localhost/express-tutorial")
+  .connect(process.env.MongoDB_URL)
   .then(() => console.log("MongoDB Connected"))
   .catch((err) => console.log(err));
 
