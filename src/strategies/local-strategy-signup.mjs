@@ -6,19 +6,54 @@ import { User, LocalUser } from "../mongoose/schemas/users.mjs";
 import { Token } from "../mongoose/schemas/token.mjs";
 import { sendEmail } from "../utils/email/sendEmail.mjs";
 
+// THESE SERIALIZER AND DESERIALIZER ARE SHARED BY ALL STRATEGIES
 passport.serializeUser((user, done) => {
   // Store user in session
-  done(null, user.id);
+  // Inside shared serializer
+  done(null, user._id);
 });
 
 passport.deserializeUser(async (id, done) => {
   try {
-    const foundedUser = await User.findById(id).select("-password");
+    const foundedUser = await User.findById(id)
+      .select("-password")
+      .populate("followers");
+    console.log(`Inside shared deserializer`);
     done(null, foundedUser);
   } catch (error) {
     done(error, null);
   }
 });
+
+/* TRY THIS LATER
+passport.deserializeUser(async ({ id, strategy }, done) => {
+  console.log("Inside general deserializer");
+  try {
+    let user;
+    switch (strategy) {
+      case "LocalUser":
+        console.log(`Key id: ${id}`);
+        user = await User.findById(id)
+          .select("-password")
+          .populate("followers");
+        break;
+      case "GoogleUser":
+        user = await User.findById(id).populate("followers");
+        break;
+      case "GitHubUser":
+        user = await User.findById(id).populate("followers");
+        break;
+      case "DiscordUser":
+        console.log(` Key: ${key.id}`);
+        user = await User.findById(id).populate("followers");
+        break;
+    }
+    done(null, user);
+  } catch (err) {
+    done(err, null);
+  }
+});
+*/
 
 export default passport.use(
   "local-signup",

@@ -4,7 +4,14 @@ import { Strategy } from "passport-local";
 import { User } from "../mongoose/schemas/users.mjs";
 import { comparePassword } from "../utils/helpers.mjs";
 
+// THESE ARE NOT CALLED, THE SIGNUP'S SERIALIZER AND DESERIALIZER ARE THE ONES CALLED
 /*
+passport.serializeUser((user, done) => {
+  // Store both the user ID and the strategy in the session
+  console.log(user);
+  done(null, user._id);
+});
+
 // Seek from session data and use that to fetch from the database
 // Also stores the user data(here, id) into the request object itself
 passport.deserializeUser(async (id, done) => {
@@ -28,18 +35,20 @@ export default passport.use(
     {
       usernameField: "email",
     },
-    async (email, password, done) => {
+    async (email, pwd, done) => {
       try {
-        if (!email || !password) {
+        if (!email || !pwd) {
           throw new Error("Email and password are required");
         }
         const findUser = await User.findOne({ email });
         if (!findUser) throw new Error("User not found");
 
-        if (!comparePassword(password, findUser.password))
+        if (!comparePassword(pwd, findUser.password))
           throw new Error("Bad credentials");
 
-        done(null, findUser);
+        // let's get rid of the password
+        const { password, ...safeUser } = findUser.toObject();
+        done(null, safeUser);
       } catch (error) {
         done(error, null);
       }

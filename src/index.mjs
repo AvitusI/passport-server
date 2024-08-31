@@ -11,12 +11,14 @@ import MongoStore from "connect-mongo";
 import cors from "cors";
 import dotenv from "dotenv";
 
-import passport from "./utils/passport-setup.mjs";
+import passport from "passport";
 
 import "./strategies/local-strategy.mjs";
 import "./strategies/discord-strategy.mjs";
 import "./strategies/github-strategy.mjs";
 import "./strategies/google-strategy.mjs";
+
+//import passport from "./utils/passport-setup.mjs";
 
 dotenv.config();
 
@@ -59,10 +61,13 @@ app.use(routes);
 
 // The request handler function is called by serializeUser
 app.post("/api/auth", passport.authenticate("local"), (request, response) => {
-  response.status(200).json(request.user);
-  //response.redirect(`${process.env.CLIENT_URL}/feed`);
-  console.log(`Inside /auth endpoint`);
-  console.log(request.user);
+  try {
+    response.status(200).json(request.user);
+    //response.redirect(`${process.env.CLIENT_URL}/feed`);
+    console.log(`Inside /auth endpoint`);
+  } catch (error) {
+    response.status(400).json(error); // not reachable
+  }
 });
 
 // modify this endpoint, it sends back the password

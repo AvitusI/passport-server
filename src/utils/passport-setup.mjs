@@ -1,6 +1,8 @@
+//  THIS FILE IS NOT CALLED AT ALL.
+
 import passport from "passport";
 
-import { User } from "../mongoose/schemas/users.mjs";
+import { LocalUser } from "../mongoose/schemas/users.mjs";
 import { GoogleUser } from "../mongoose/schemas/users.mjs";
 import { GitHubUser } from "../mongoose/schemas/users.mjs";
 import { DiscordUser } from "../mongoose/schemas/users.mjs";
@@ -8,16 +10,20 @@ import { DiscordUser } from "../mongoose/schemas/users.mjs";
 // Unified serializeUser
 passport.serializeUser((user, done) => {
   // Store both the user ID and the strategy in the session
-  done(null, { id: user, strategy: user.strategy });
+  console.log(user);
+  done(null, user._id);
 });
+// done(null, { id: user.id, strategy: user.strategy });
 
 // Unified deserializeUser
+/*
 passport.deserializeUser(async (key, done) => {
   try {
     let user;
     switch (key.strategy) {
       case "LocalUser":
-        user = await User.findById(key.id).select("-password -strategy");
+        console.log(`Key id: ${key.id}`);
+        user = await LocalUser.findById(key.id).populate("followers");
         break;
       case "GoogleUser":
         user = await GoogleUser.findById(key.id).select("-strategy");
@@ -26,6 +32,7 @@ passport.deserializeUser(async (key, done) => {
         user = await GitHubUser.findById(key.id).select("-strategy");
         break;
       case "DiscordUser":
+        console.log(` Key: ${key.id}`);
         user = await DiscordUser.findById(key.id).select("-strategy");
         break;
       default:
@@ -35,6 +42,6 @@ passport.deserializeUser(async (key, done) => {
   } catch (err) {
     done(err, null);
   }
-});
+}); */
 
 export default passport;
