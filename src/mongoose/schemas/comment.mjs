@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import { LikeCommentNotification } from "./notifications.mjs";
 import { CommentNotification } from "./notifications.mjs";
+import { Reply } from "./reply.mjs";
 
 const CommentSchema = new mongoose.Schema(
   {
@@ -24,6 +25,12 @@ const CommentSchema = new mongoose.Schema(
         ref: "User",
       },
     ],
+    replies: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Reply",
+      },
+    ],
   },
   {
     timestamps: true,
@@ -41,6 +48,13 @@ CommentSchema.post("findOneAndDelete", async function (comment) {
   if (comment) {
     await CommentNotification.deleteMany({ commentId: comment._id });
     console.log("Comment deleted together with its notifications");
+  }
+});
+
+CommentSchema.post("findOneAndDelete", async function (comment) {
+  if (comment) {
+    await Reply.deleteMany({ commentId: comment._id });
+    console.log("Comment deleted with its associated replies");
   }
 });
 

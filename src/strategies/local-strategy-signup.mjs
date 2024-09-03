@@ -17,7 +17,7 @@ passport.deserializeUser(async (id, done) => {
   try {
     const foundedUser = await User.findById(id)
       .select("-password")
-      .populate("followers");
+      .populate("followers", "-password");
     console.log(`Inside shared deserializer`);
     done(null, foundedUser);
   } catch (error) {

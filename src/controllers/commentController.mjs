@@ -1,7 +1,8 @@
 import asyncHandler from "express-async-handler";
 
-import { Comment } from "../mongoose/schemas/comment.mjs";
 import { Post } from "../mongoose/schemas/post.mjs";
+import { Comment } from "../mongoose/schemas/comment.mjs";
+import { Reply } from "../mongoose/schemas/reply.mjs";
 import {
   CommentNotification,
   LikeCommentNotification,
@@ -174,7 +175,8 @@ export const allComments = asyncHandler(async (request, response) => {
   try {
     const comments = await Comment.find({ postId })
       .populate("postId")
-      .populate("likes");
+      .populate("likes")
+      .sort({ createdAt: -1 });
 
     return response.status(200).json(comments);
   } catch (error) {
@@ -217,7 +219,7 @@ export const likeComment = asyncHandler(async (request, response) => {
 
 export const unlikeComment = asyncHandler(async (request, response) => {
   if (!request.user) {
-    return response.status(400).send("Unauthorized");
+    return response.status(400).json("Unauthorized");
   }
 
   const { id } = request.body;
@@ -239,6 +241,103 @@ export const unlikeComment = asyncHandler(async (request, response) => {
     });
 
     return response.sendStatus(200);
+  } catch (error) {
+    return response.sendStatus(400);
+  }
+});
+
+export const replyComment = asyncHandler(async (request, response) => {
+  if (!request.user) {
+    return response.status(400).json("Unauthorized");
+  }
+
+  const { content, commentId } = request.body;
+
+  if (!content) {
+    return response.status(400).json("The content cannot be empty");
+  }
+
+  try {
+    const comment = await Comment.findById(commentId);
+
+    if (!comment) {
+      return response.status(400).json("Comment not found");
+    }
+
+    const reply = new Reply({
+      content,
+      userId: request.user._id,
+      commentId,
+    });
+
+    const savedReply = await reply.save();
+
+    await Comment.findByIdAndUpdate(
+      commentId,
+      {
+        $addToSet: { replies: savedReply._id },
+      },
+      { new: true }
+    );
+
+    return response.status(200).json(savedReply);
+  } catch (error) {
+    console.log(error);
+    return response.sendStatus(400);
+  }
+});
+
+export const deleteReply = asyncHandler(async (request, response) => {
+  if (!request.user) {
+    return response.status(400).json({ message: "Unauthorized" });
+  }
+
+  const { id } = request.body;
+
+  try {
+    const reply = await Reply.findById(id);
+
+    if (!reply) {
+      return response.status(400).json({ message: "Reply not found" });
+    }
+
+    if (reply.userId.toString() !== request.user._id.toString()) {
+      return response
+        .status(400)
+        .json({ message: "You can only delete your own content" });
+    }
+
+    await Reply.findByIdAndDelete(reply._id);
+
+    await Comment.findByIdAndUpdate(
+      reply.commentId,
+      {
+        $pull: { replies: reply._id },
+      },
+      { new: true }
+    );
+
+    return response.sendStatus(200);
+  } catch (error) {
+    console.log(error);
+    return response.sendStatus(400);
+  }
+});
+
+export const allReplies = asyncHandler(async (request, response) => {
+  if (!request.user) {
+    return response.status(400).send("Unauthorized");
+  }
+
+  const { commentId } = request.params;
+
+  try {
+    const comment = await Reply.find({ commentId })
+      .populate("userId", "-password")
+      .populate("likes", "-password")
+      .sort({ createdAt: -1 });
+
+    return response.status(200).json(comment);
   } catch (error) {
     return response.sendStatus(400);
   }
