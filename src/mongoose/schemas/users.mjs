@@ -18,6 +18,18 @@ const baseUserSchema = new mongoose.Schema(
         ref: "User",
       },
     ],
+    following: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
+    bookmarks: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Post",
+      },
+    ],
     bio: {
       type: String,
     },

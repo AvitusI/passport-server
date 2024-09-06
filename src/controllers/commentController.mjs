@@ -10,14 +10,16 @@ import {
 
 export const createComment = asyncHandler(async (request, response) => {
   if (!request.user) {
-    return response.status(400).json("Unauthorized");
+    return response.status(400).json({ message: "Unauthorized" });
   }
 
   const { content } = request.body;
   const { postId } = request.params;
 
   if (!content) {
-    return response.status(400).json("The content cannot be empty");
+    return response
+      .status(400)
+      .json({ message: "The content cannot be empty" });
   }
 
   const comment = new Comment({
@@ -59,13 +61,13 @@ export const createComment = asyncHandler(async (request, response) => {
 
     return response.status(200).json(commentedPost);
   } catch (error) {
-    return response.sendStatus(400);
+    throw new Error(error);
   }
 });
 
 export const getCommentsByUser = asyncHandler(async (request, response) => {
   if (!request.user) {
-    return response.status(400).json("Unauthorized");
+    return response.status(400).json({ message: "Unauthorized" });
   }
 
   const { userId } = request.params;
@@ -102,27 +104,51 @@ export const getCommentsByUser = asyncHandler(async (request, response) => {
       totalPages,
     });
   } catch (error) {
-    return response.status(400).json({ message: message.error });
+    throw new Error(error);
+  }
+});
+
+export const getComment = asyncHandler(async (request, response) => {
+  if (!request.user) {
+    return response.status(401).json({ message: "Unauthorized" });
+  }
+
+  const { commentId } = request.params;
+
+  try {
+    const comment = await Comment.findById(commentId);
+
+    if (!comment) {
+      return response.status(404).json({ message: "comment not found" });
+    }
+
+    return response.status(200).json(comment);
+  } catch (error) {
+    throw new Error(error);
   }
 });
 
 export const editComment = asyncHandler(async (request, response) => {
   if (!request.user) {
-    return response.status(400).send("Unauthorized");
+    return response.status(400).json({ message: "Unauthorized" });
   }
 
   const { content } = request.body;
   const { id } = request.params;
 
   if (!content) {
-    return response.status(400).send("The content cannot be empty");
+    return response
+      .status(400)
+      .json({ message: "The content cannot be empty" });
   }
 
   try {
     const comment = await Comment.findById(id);
 
     if (comment.userId.toString() !== request.user.id.toString()) {
-      return response.status(400).send("You can only modify your own content");
+      return response
+        .status(400)
+        .json({ message: "You can only modify your own content" });
     }
 
     const updatedComment = await Comment.findByIdAndUpdate(
@@ -135,17 +161,18 @@ export const editComment = asyncHandler(async (request, response) => {
       { new: true }
     ).populate("userId", "-password");
 
-    if (!updatedComment) return response.status(400).send("Comment not found!");
+    if (!updatedComment)
+      return response.status(404).json({ message: "Comment not found!" });
 
     return response.status(200).json(updatedComment);
   } catch (error) {
-    return response.sendStatus(400);
+    throw new Error(error);
   }
 });
 
 export const deleteComment = asyncHandler(async (request, response) => {
   if (!request.user) {
-    return response.status(400).send("Unauthorized");
+    return response.status(400).json({ message: "Unauthorized" });
   }
 
   const { id } = request.params;
@@ -154,20 +181,22 @@ export const deleteComment = asyncHandler(async (request, response) => {
     const comment = await Comment.findById(id);
 
     if (comment.userId.toString() !== request.user._id.toString()) {
-      return response.status(400).send("You can only delete your own content");
+      return response
+        .status(400)
+        .json({ message: "You can only delete your own content" });
     }
 
     await Comment.findByIdAndDelete(id);
 
     return response.sendStatus(200);
   } catch (error) {
-    return response.sendStatus(400);
+    throw new Error(error);
   }
 });
 
 export const allComments = asyncHandler(async (request, response) => {
   if (!request.user) {
-    return response.status(400).send("Unauthorized");
+    return response.status(400).json({ message: "Unauthorized" });
   }
 
   const { postId } = request.params;
@@ -180,13 +209,13 @@ export const allComments = asyncHandler(async (request, response) => {
 
     return response.status(200).json(comments);
   } catch (error) {
-    return response.sendStatus(400);
+    throw new Error(error);
   }
 });
 
 export const likeComment = asyncHandler(async (request, response) => {
   if (!request.user) {
-    return response.status(400).send("Unauthorized");
+    return response.status(400).json({ message: "Unauthorized" });
   }
 
   const { id } = request.body;
@@ -213,13 +242,13 @@ export const likeComment = asyncHandler(async (request, response) => {
 
     return response.sendStatus(200);
   } catch (error) {
-    return response.sendStatus(400);
+    throw new Error(error);
   }
 });
 
 export const unlikeComment = asyncHandler(async (request, response) => {
   if (!request.user) {
-    return response.status(400).json("Unauthorized");
+    return response.status(400).json({ message: "Unauthorized" });
   }
 
   const { id } = request.body;
@@ -242,26 +271,28 @@ export const unlikeComment = asyncHandler(async (request, response) => {
 
     return response.sendStatus(200);
   } catch (error) {
-    return response.sendStatus(400);
+    throw new Error(error);
   }
 });
 
 export const replyComment = asyncHandler(async (request, response) => {
   if (!request.user) {
-    return response.status(400).json("Unauthorized");
+    return response.status(400).json({ message: "Unauthorized" });
   }
 
   const { content, commentId } = request.body;
 
   if (!content) {
-    return response.status(400).json("The content cannot be empty");
+    return response
+      .status(400)
+      .json({ message: "The content cannot be empty" });
   }
 
   try {
     const comment = await Comment.findById(commentId);
 
     if (!comment) {
-      return response.status(400).json("Comment not found");
+      return response.status(404).json({ message: "Comment not found" });
     }
 
     const reply = new Reply({
@@ -283,7 +314,7 @@ export const replyComment = asyncHandler(async (request, response) => {
     return response.status(200).json(savedReply);
   } catch (error) {
     console.log(error);
-    return response.sendStatus(400);
+    throw new Error(error);
   }
 });
 
@@ -298,7 +329,7 @@ export const deleteReply = asyncHandler(async (request, response) => {
     const reply = await Reply.findById(id);
 
     if (!reply) {
-      return response.status(400).json({ message: "Reply not found" });
+      return response.status(404).json({ message: "Reply not found" });
     }
 
     if (reply.userId.toString() !== request.user._id.toString()) {
@@ -319,14 +350,13 @@ export const deleteReply = asyncHandler(async (request, response) => {
 
     return response.sendStatus(200);
   } catch (error) {
-    console.log(error);
-    return response.sendStatus(400);
+    throw new Error(error);
   }
 });
 
 export const allReplies = asyncHandler(async (request, response) => {
   if (!request.user) {
-    return response.status(400).send("Unauthorized");
+    return response.status(400).send({ message: "Unauthorized" });
   }
 
   const { commentId } = request.params;
@@ -339,6 +369,6 @@ export const allReplies = asyncHandler(async (request, response) => {
 
     return response.status(200).json(comment);
   } catch (error) {
-    return response.sendStatus(400);
+    throw new Error(error);
   }
 });

@@ -51,6 +51,6 @@ export const getUserFeed = asyncHandler(async (request, response) => {
       totalPages,
     });
   } catch (error) {
-    return response.status(400).json({ message: error.message });
+    throw new Error(error);
   }
 });

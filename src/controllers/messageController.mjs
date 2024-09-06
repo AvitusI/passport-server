@@ -6,14 +6,14 @@ import { Chat } from "../mongoose/schemas/chat.mjs";
 
 export const sendMessage = asyncHandler(async (request, response) => {
   if (!request.user) {
-    return response.status(400).json("Unauthorized");
+    return response.status(400).json({ message: "Unauthorized" });
   }
 
   const { content, chatId } = request.body;
   console.log(request.body);
 
   if (!content || !chatId) {
-    return response.status(400).json("Cannot send empty message");
+    return response.status(400).json({ message: "Cannot send empty message" });
   }
 
   const newMessage = {
@@ -62,13 +62,13 @@ export const sendMessage = asyncHandler(async (request, response) => {
     return response.status(200).json(populatedMessage);
   } catch (error) {
     console.log(error);
-    return response.status(400).json("An error occured");
+    throw new Error(error);
   }
 });
 
 export const allMessages = asyncHandler(async (request, response) => {
   if (!request.user) {
-    return response.status(400).send("Unauthorized");
+    return response.status(400).json({ message: "Unauthorized" });
   }
 
   const { chatId } = request.params;
@@ -80,6 +80,6 @@ export const allMessages = asyncHandler(async (request, response) => {
 
     return response.status(200).json(messages);
   } catch (error) {
-    return response.sendStatus(400);
+    throw new Error(error);
   }
 });

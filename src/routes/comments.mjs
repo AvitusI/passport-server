@@ -2,6 +2,7 @@ import express from "express";
 
 import {
   createComment,
+  getComment,
   editComment,
   deleteComment,
   allComments,
@@ -17,6 +18,7 @@ const router = express.Router();
 
 router.post("/api/:postId/comments", createComment);
 router.get("/api/comments/:userId", getCommentsByUser);
+router.get("/api/comment/:commentId", getComment);
 router.put("/api/comments/:id", editComment);
 router.delete("/api/comments/:id", deleteComment);
 router.get("/api/:postId/comments", allComments);

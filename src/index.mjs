@@ -17,6 +17,7 @@ import "./strategies/local-strategy.mjs";
 import "./strategies/discord-strategy.mjs";
 import "./strategies/github-strategy.mjs";
 import "./strategies/google-strategy.mjs";
+import errorHandler from "./middleware/errorMiddleware.mjs";
 
 //import passport from "./utils/passport-setup.mjs";
 
@@ -46,7 +47,7 @@ app.use(
     saveUninitialized: false, // not saving unmodified sessions data to the store
     resave: false, // resaves the session in session store per request
     cookie: {
-      maxAge: 60000 * 60,
+      maxAge: 60000 * 60 * 24,
     },
     store: MongoStore.create({
       client: mongoose.connection.getClient(),
@@ -111,6 +112,8 @@ app.get(
     response.redirect(`${process.env.CLIENT_URL}/feed`);
   }
 );
+
+app.use(errorHandler);
 
 const server = http.createServer(app);
 

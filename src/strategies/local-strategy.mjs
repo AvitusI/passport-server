@@ -40,7 +40,7 @@ export default passport.use(
         if (!email || !pwd) {
           throw new Error("Email and password are required");
         }
-        const findUser = await User.findOne({ email });
+        const findUser = await User.findOne({ email, active: true });
         if (!findUser) throw new Error("User not found");
 
         if (!comparePassword(pwd, findUser.password))

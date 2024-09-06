@@ -9,11 +9,11 @@ export const savePost = asyncHandler(async (request, response) => {
   const { content } = request.body;
 
   if (!request.user) {
-    return response.status(401).json("Unauthorized");
+    return response.status(401).json({ message: "Unauthorized" });
   }
 
   if (!content) {
-    return response.status(400).json("content is required");
+    return response.status(400).json({ message: "Content is required" });
   }
 
   const newPost = new Post({
@@ -70,30 +70,31 @@ export const savePost = asyncHandler(async (request, response) => {
       //await Promise.all([notification, feedUpdate]);
     });
 
-    return response.status(201).send(savedPost);
+    return response.sendStatus(200);
   } catch (error) {
-    console.log(error);
-    return response.sendStatus(400);
+    throw new Error(error);
   }
 });
 
 export const editPost = asyncHandler(async (request, response) => {
   if (!request.user) {
-    return response.status(401).json("Unauthorized");
+    return response.status(400).json({ message: "Unauthorized" });
   }
 
   const { content } = request.body;
   const { id } = request.params;
 
   if (!content) {
-    return response.status(400).json("Content is required");
+    return response.status(400).json({ message: "Content is required" });
   }
 
   try {
     const retrievedPost = await Post.findById(id);
 
     if (retrievedPost.author.toString() !== request.user._id.toString()) {
-      return response.status(400).send("Your can only edit your own content");
+      return response
+        .status(400)
+        .json({ message: "You can only edit your own content" });
     }
     const data = {
       $set: {
@@ -105,30 +106,36 @@ export const editPost = asyncHandler(async (request, response) => {
 
     return response.status(200).json(updatedPost);
   } catch (error) {
-    return response.sendStatus(400);
+    throw new Error(error);
   }
 });
 
 export const deletePost = asyncHandler(async (request, response) => {
+  if (!request.user) {
+    return response.status(400).json({ message: "Unauthorized" });
+  }
+
   const { id } = request.params;
 
   try {
     const post = await Post.findById(id);
 
     if (post.author.toString() !== request.user._id.toString()) {
-      return response.status(400).send("You can only delete your own content");
+      return response
+        .status(400)
+        .json({ message: "You can only delete your own content" });
     }
 
     await Post.findByIdAndDelete(id);
     return response.sendStatus(200);
   } catch (error) {
-    return response.sendStatus(400);
+    throw new Error(error);
   }
 });
 
 export const getPostsByUser = asyncHandler(async (request, response) => {
   if (!request.user) {
-    return response.status(400).send("Unauthorized");
+    return response.status(400).json({ message: "Unauthorized" });
   }
 
   const { userId } = request.params;
@@ -165,13 +172,13 @@ export const getPostsByUser = asyncHandler(async (request, response) => {
       totalPages,
     });
   } catch (error) {
-    return response.status(400).json({ message: error.message });
+    throw new Error(error);
   }
 });
 
 export const getPost = asyncHandler(async (request, response) => {
   if (!request.user) {
-    return response.status(400).json("Unauthorized");
+    return response.status(400).json({ message: "Unauthorized" });
   }
 
   const { id } = request.params;
@@ -195,17 +202,17 @@ export const getPost = asyncHandler(async (request, response) => {
       .populate("author", "-password");
 
     if (!post) {
-      return response.status(400).json("Post not found");
+      return response.status(404).json({ message: "Post not found" });
     }
     return response.status(200).json(post);
   } catch (error) {
-    return response.sendStatus(400);
+    throw new Error(error);
   }
 }); //
 
 export const allPosts = asyncHandler(async (request, response) => {
   if (!request.user) {
-    return response.status(400).send("Unauthorized");
+    return response.status(400).json({ message: "Unauthorized" });
   }
 
   try {
@@ -220,13 +227,13 @@ export const allPosts = asyncHandler(async (request, response) => {
       });
     return response.status(200).json(posts);
   } catch (error) {
-    return response.sendStatus(400);
+    throw new Error(error);
   }
 });
 
 export const likePost = asyncHandler(async (request, response) => {
   if (!request.user) {
-    return response.status(400).send("Unauthorized");
+    return response.status(400).json({ message: "Unauthorized" });
   }
 
   const { id } = request.body;
@@ -241,7 +248,7 @@ export const likePost = asyncHandler(async (request, response) => {
     ).populate("likes", "-_id -password");
 
     if (!post) {
-      return response.status(404).send("Post not found");
+      return response.status(404).json({ message: "Post not found" });
     }
 
     const notification = new LikePostNotification({
@@ -255,13 +262,13 @@ export const likePost = asyncHandler(async (request, response) => {
 
     return response.sendStatus(200);
   } catch (error) {
-    return response.sendStatus(400);
+    throw new Error(error);
   }
 });
 
 export const unlikePost = asyncHandler(async (request, response) => {
   if (!request.user) {
-    return response.status(400).send("Unauthorized");
+    return response.status(400).json({ message: "Unauthorized" });
   }
 
   const { id } = request.body;
@@ -282,6 +289,58 @@ export const unlikePost = asyncHandler(async (request, response) => {
 
     return response.sendStatus(200);
   } catch (error) {
-    return response.sendStatus(400);
+    throw new Error(error);
+  }
+});
+
+export const bookmarkPost = asyncHandler(async (request, response) => {
+  if (!request.user) {
+    return response.status(401).json({ message: "Unauthorized" });
+  }
+
+  const { id } = request.params;
+
+  try {
+    const user = await User.findByIdAndUpdate(
+      request.user._id,
+      {
+        $addToSet: { bookmarks: id },
+      },
+      { new: true }
+    );
+
+    if (!user) {
+      return response.status(404).json({ message: "User not found" });
+    }
+
+    return response.sendStatus(200);
+  } catch (error) {
+    throw new Error(error);
+  }
+});
+
+export const unbookmarkPost = asyncHandler(async (request, response) => {
+  if (!request.user) {
+    return response.status(401).json({ message: "Unauthorized" });
+  }
+
+  const { id } = request.params;
+
+  try {
+    const user = await User.findByIdAndUpdate(
+      request.user._id,
+      {
+        $pull: { bookmarks: id },
+      },
+      { new: true }
+    );
+
+    if (!user) {
+      return response.status(404).json({ message: "User not found" });
+    }
+
+    return response.sendStatus(200);
+  } catch (error) {
+    throw new Error(error);
   }
 });

@@ -18,10 +18,19 @@ export const registerUser = asyncHandler(async (request, response) => {
   const { body } = request;
 
   try {
-    const user = await User.findOne({ email: body.email });
+    const user = await User.findOne({ email: body.email, active: true });
 
     if (user) {
-      return response.status(400).json({ message: "user already exist" });
+      return response.status(400).json({ message: "User already exist" });
+    }
+
+    const inActiveUser = await User.findOne({
+      email: body.email,
+      active: false,
+    });
+
+    if (inActiveUser) {
+      await User.findByIdAndDelete(inActiveUser._id);
     }
 
     body.password = hashPassword(body.password);
@@ -52,16 +61,15 @@ export const registerUser = asyncHandler(async (request, response) => {
       "activateAccount.handlebars"
     );
 
-    return response.status(200).json(link);
+    return response.status(200).json({ message: "Activation link sent" });
   } catch (err) {
-    console.error(err);
-    return response.sendStatus(400);
+    throw new Error(err);
   }
 });
 
 export const allUsers = asyncHandler(async (request, response) => {
   if (!request.user) {
-    return response.status(401).json("Unauthorized");
+    return response.status(401).json({ message: "Unauthorized" });
   }
 
   try {
@@ -71,13 +79,13 @@ export const allUsers = asyncHandler(async (request, response) => {
     );
     return response.status(200).json(users);
   } catch (error) {
-    return response.sendStatus(400);
+    throw new Error(error);
   }
 });
 
 export const getUser = asyncHandler(async (request, response) => {
   if (!request.user) {
-    return response.status(400).json("Unauthorized");
+    return response.status(400).json({ message: "Unauthorized" });
   }
 
   const { userId } = request.params;
@@ -89,13 +97,13 @@ export const getUser = asyncHandler(async (request, response) => {
 
     return response.status(200).send(user);
   } catch (error) {
-    return response.sendStatus(400);
+    throw new Error(error);
   }
 });
 
 export const editProfile = asyncHandler(async (request, response) => {
   if (!request.user) {
-    return response.status(401).send("Unauthorized");
+    return response.status(401).json({ message: "Unauthorized" });
   }
 
   const { userId } = request.params;
@@ -103,7 +111,7 @@ export const editProfile = asyncHandler(async (request, response) => {
   if (request.user._id.toString() !== userId) {
     return response
       .status(400)
-      .json("You are not authorized to edit this profile");
+      .json({ message: "You are not authorized to edit this profile" });
   }
 
   try {
@@ -118,13 +126,12 @@ export const editProfile = asyncHandler(async (request, response) => {
     ).select("-password -strategy");
 
     if (!user) {
-      return response.status(404).json("User not found");
+      return response.status(404).json({ message: "User not found" });
     }
 
     return response.status(200).json(user);
   } catch (error) {
-    console.error(error);
-    return response.sendStatus(400);
+    throw new Error(error);
   }
 });
 
@@ -132,7 +139,7 @@ export const followUser = asyncHandler(async (request, response) => {
   const { userId } = request.body;
 
   if (!request.user) {
-    return response.status(401).send("Unauthorized");
+    return response.status(401).json({ message: "Unauthorized" });
   }
 
   try {
@@ -145,8 +152,18 @@ export const followUser = asyncHandler(async (request, response) => {
     ).populate("followers", "_id username");
 
     if (!userToFollow) {
-      return response.status(404).json("User not found");
+      return response.status(404).json({ message: "User not found" });
     }
+
+    await User.findByIdAndUpdate(
+      request.user._id,
+      {
+        $addToSet: { following: userToFollow._id },
+      },
+      {
+        new: true,
+      }
+    );
 
     const newNotification = new FollowNotification({
       userId: userId,
@@ -176,7 +193,7 @@ export const followUser = asyncHandler(async (request, response) => {
 
     return response.sendStatus(200);
   } catch (error) {
-    return response.sendStatus(400);
+    throw new Error(error);
   }
 });
 
@@ -184,7 +201,7 @@ export const unfollowUser = asyncHandler(async (request, response) => {
   const { userId } = request.body;
 
   if (!request.user) {
-    return response.status(401).json("Unauthorized");
+    return response.status(401).json({ message: "Unauthorized" });
   }
 
   try {
@@ -197,8 +214,16 @@ export const unfollowUser = asyncHandler(async (request, response) => {
     ).populate("followers", "_id username");
 
     if (!userToUnfollow) {
-      return response.status(404).send("User not found");
+      return response.status(404).json({ message: "User not found" });
     }
+
+    await User.findByIdAndUpdate(
+      request.user._id,
+      {
+        $pull: { following: userToUnfollow._id },
+      },
+      { new: true }
+    );
 
     await FollowNotification.findOneAndDelete({
       followerId: request.user.id,
@@ -218,15 +243,14 @@ export const unfollowUser = asyncHandler(async (request, response) => {
 
     return response.sendStatus(200);
   } catch (error) {
-    return response.sendStatus(400);
+    throw new Error(error);
   }
 });
 
 export const searchUser = asyncHandler(async (request, response) => {
-  /*
   if (!request.user) {
-    return response.json("Unauthorized");
-  } */
+    return response.status(401).json({ message: "Unauthorized" });
+  }
 
   try {
     const { username } = request.query;

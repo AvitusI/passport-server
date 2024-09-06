@@ -5,13 +5,13 @@ import { Post } from "../mongoose/schemas/post.mjs";
 
 export const retrieveMedia = asyncHandler(async (request, response) => {
   if (!request.user) {
-    return response.status(400).json("Unauthorized");
+    return response.status(400).json({ message: "Unauthorized" });
   }
 
   const { userId } = request.params;
 
   if (!userId) {
-    return response.status(401).json("Invalid request");
+    return response.status(401).json({ message: "Invalid request" });
   }
 
   const authorId = new mongoose.Types.ObjectId(userId);
@@ -39,6 +39,6 @@ export const retrieveMedia = asyncHandler(async (request, response) => {
     return response.status(200).send(aggregatedMedia);
   } catch (error) {
     console.error(error);
-    return response.sendStatus(400);
+    throw new Error(error);
   }
 });

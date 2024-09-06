@@ -4,16 +4,17 @@ import { Notification } from "../mongoose/schemas/notifications.mjs";
 import { Message } from "../mongoose/schemas/message.mjs";
 import { messageNotification } from "../mongoose/schemas/messageNotification.mjs";
 import { Chat } from "../mongoose/schemas/chat.mjs";
+import mongoose from "mongoose";
 
 export const allNotification = asyncHandler(async (request, response) => {
   if (!request.user) {
-    return response.status(400).json("Unauthorized");
+    return response.status(400).json({ message: "Unauthorized" });
   }
 
   const { userId } = request.params;
 
   try {
-    const notifications = await Notification.find({ userId })
+    const notifications = await Notification.find({ userId, read: false })
       .populate("userId", "-password")
       .populate("commentId")
       .populate("followerId")
@@ -26,12 +27,33 @@ export const allNotification = asyncHandler(async (request, response) => {
   }
 });
 
+export const allNotificationMixed = asyncHandler(async (request, response) => {
+  if (!request.user) {
+    return response.status(400).json({ message: "Unauthorized " });
+  }
+
+  const { userId } = request.params;
+
+  try {
+    const notifications = await Notification.find({ userId })
+      .populate("commentId")
+      .populate("followerId")
+      .populate("likerId")
+      .populate("commenterId")
+      .sort({ read: 1 });
+
+    return response.status(200).json(notifications);
+  } catch (error) {
+    return response.sendStatus(400);
+  }
+});
+
 export const markAsRead = asyncHandler(async (request, response) => {
   if (!request.user) {
     return response.status(200).send("Unauthorized");
   }
 
-  const { id } = request.params;
+  const { id } = request.body;
 
   try {
     const notification = await Notification.findById(id);
@@ -58,6 +80,31 @@ export const markAsRead = asyncHandler(async (request, response) => {
   }
 });
 
+export const markAllAsRead = asyncHandler(async (request, response) => {
+  if (!request.user) {
+    return response.status(400).json({ message: "Unauthorized" });
+  }
+
+  const { userId } = request.body;
+
+  // const ownerId = new mongoose.Types.ObjectId(userId); // Convert userId to ObjectId (modern way)
+
+  try {
+    await Notification.updateMany(
+      { userId: userId },
+      {
+        $set: {
+          read: true,
+        },
+      }
+    );
+
+    return response.sendStatus(200);
+  } catch (error) {
+    return response.sendStatus(400);
+  }
+});
+
 export const allMessageNotification = asyncHandler(
   async (request, response) => {
     if (!request.user) {
@@ -75,6 +122,27 @@ export const allMessageNotification = asyncHandler(
       return response.status(200).json(notifications);
     } catch (error) {
       return response.sendStatus(400);
+    }
+  }
+);
+
+export const allMessageNotificationMixture = asyncHandler(
+  async (request, response) => {
+    if (!request.user) {
+      return response.status(400).json({ message: "Unauthorized" });
+    }
+
+    const { userId } = request.params;
+
+    try {
+      const notifications = await messageNotification
+        .find({ userId })
+        .populate("messageId")
+        .populate("senderId");
+
+      return response.status(200).json(notifications);
+    } catch (error) {
+      response.sendStatus(400);
     }
   }
 );

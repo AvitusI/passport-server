@@ -17,7 +17,17 @@ passport.deserializeUser(async (id, done) => {
   try {
     const foundedUser = await User.findById(id)
       .select("-password")
-      .populate("followers", "-password");
+      .populate("followers", "-password")
+      .populate("following", "-password")
+      .populate({
+        path: "bookmarks",
+        populate: [
+          {
+            path: "author",
+            select: "-password -strategy",
+          },
+        ],
+      });
     console.log(`Inside shared deserializer`);
     done(null, foundedUser);
   } catch (error) {
@@ -68,7 +78,7 @@ export default passport.use(
       console.log(request.body);
 
       if (!userId || !token) {
-        done(new Error("userId and token required"), null);
+        done(new Error("ID and token required"), null);
       }
 
       try {
@@ -78,13 +88,13 @@ export default passport.use(
         });
 
         if (!accountActivateToken) {
-          done(new Error("Invalid or expired password reset token"), null);
+          done(new Error("Invalid or expired account activate token"), null);
         }
 
         const isValid = await bcrypt.compare(token, accountActivateToken.token);
 
         if (!isValid) {
-          done(new Error("Invalid or expired password reset token"), null);
+          done(new Error("Invalid or expired account activate token"), null);
         }
 
         const activatedUser = await LocalUser.findByIdAndUpdate(

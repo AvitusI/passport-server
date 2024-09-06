@@ -6,7 +6,7 @@ import { messageNotification } from "../mongoose/schemas/messageNotification.mjs
 
 export const getChats = asyncHandler(async (request, response) => {
   if (!request.user) {
-    return response.status(400).json("Unauthorized");
+    return response.status(400).json({ message: "Unauthorized" });
   }
 
   try {
@@ -25,14 +25,13 @@ export const getChats = asyncHandler(async (request, response) => {
 
     return response.status(200).json(chats);
   } catch (error) {
-    console.log(error);
-    return response.sendStatus(400);
+    throw new Error(error);
   }
 });
 
 export const accessChat = asyncHandler(async (request, response) => {
   if (!request.user) {
-    return response.status(400).send("Unauthorized");
+    return response.status(400).json({ message: "Unauthorized" });
   }
 
   const { userId } = request.body;
@@ -71,7 +70,7 @@ export const accessChat = asyncHandler(async (request, response) => {
 
       return response.status(200).json(retrievedChat);
     } catch (error) {
-      return response.sendStatus(400);
+      throw new Error(error);
     }
   }
 });

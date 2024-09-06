@@ -29,9 +29,7 @@ const cldUpload = async (imagePath) => {
 export const addImage = async (request, response) => {
   try {
     if (!request.user) {
-      return response
-        .status(401)
-        .json({ status: "error", message: "Unauthorized" });
+      return response.status(401).json({ message: "Unauthorized" });
     }
 
     const { data, mimetype } = request.files.image;
@@ -41,6 +39,6 @@ export const addImage = async (request, response) => {
 
     return response.status(200).json({ status: "ok", imageUrl });
   } catch (error) {
-    console.error(error);
+    throw new Error(error);
   }
 };
