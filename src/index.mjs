@@ -18,6 +18,7 @@ import "./strategies/discord-strategy.mjs";
 import "./strategies/github-strategy.mjs";
 import "./strategies/google-strategy.mjs";
 import errorHandler from "./middleware/errorMiddleware.mjs";
+import { Notification } from "./mongoose/schemas/notifications.mjs";
 
 //import passport from "./utils/passport-setup.mjs";
 
@@ -113,6 +114,31 @@ app.get(
   }
 );
 
+// Socket event completes first before mongodb change-streams,
+// this is why we need to store the notification in a variable
+// In the  frontend we will wait some seconds before emitting the notification event
+let myNotification;
+
+await Notification.watch().on("change", async (data) => {
+  if (data.operationType === "insert") {
+    const notificationId = data.documentKey._id;
+
+    try {
+      // Fetch the full post document with the author populated
+      const notification = await Notification.findById(notificationId)
+        .populate("likerId")
+        .populate("commenterId")
+        .populate("followerId");
+
+      if (notification) {
+        myNotification = notification;
+      }
+    } catch (error) {
+      console.error("Error fetching or populating post:", error);
+    }
+  }
+});
+
 app.use(errorHandler);
 
 const server = http.createServer(app);
@@ -127,14 +153,28 @@ const io = new Server(server, {
 io.on("connection", (socket) => {
   console.log(`User connected ${socket.id}`);
 
+  socket.on("join_notifications", (userId) => {
+    socket.join(userId);
+    console.log(`User joined notifications ${userId}`);
+  });
+
+  socket.on("new_notification", () => {
+    if (myNotification) {
+      console.log(`User ID: ${myNotification.userId.toString()}`);
+      socket
+        .to(myNotification.userId.toString())
+        .emit("notification", myNotification);
+    } else {
+      console.log("Notification waiting");
+    }
+  });
+
   socket.on("join_chat", (chatId) => {
     socket.join(chatId);
     console.log(`User joined chat ${chatId}`);
   });
 
   socket.on("send_message", (message) => {
-    console.log(message.content, message.chatId);
-
     socket.to(message.chatId).emit("receive_message", message);
   });
 

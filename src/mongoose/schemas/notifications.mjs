@@ -75,6 +75,22 @@ export const LikeCommentNotification = Notification.discriminator(
   })
 );
 
+export const LikeReplyNotification = Notification.discriminator(
+  "LikeReplyNotification",
+  new mongoose.Schema({
+    replyId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Reply",
+      required: true,
+    },
+    likerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+  })
+);
+
 export const CommentNotification = Notification.discriminator(
   "CommentNotification",
   new mongoose.Schema({
