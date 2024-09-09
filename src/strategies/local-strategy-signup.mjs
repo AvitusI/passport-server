@@ -10,7 +10,7 @@ import { sendEmail } from "../utils/email/sendEmail.mjs";
 passport.serializeUser((user, done) => {
   // Store user in session
   // Inside shared serializer
-  done(null, user._id);
+  return done(null, user._id);
 });
 
 passport.deserializeUser(async (id, done) => {
@@ -28,10 +28,9 @@ passport.deserializeUser(async (id, done) => {
           },
         ],
       });
-    console.log(`Inside shared deserializer`);
-    done(null, foundedUser);
+    return done(null, foundedUser);
   } catch (error) {
-    done(error, null);
+    return done(error, null);
   }
 });
 
@@ -78,7 +77,7 @@ export default passport.use(
       console.log(request.body);
 
       if (!userId || !token) {
-        done(new Error("ID and token required"), null);
+        return done(new Error("ID and token required"), null);
       }
 
       try {
@@ -88,13 +87,19 @@ export default passport.use(
         });
 
         if (!accountActivateToken) {
-          done(new Error("Invalid or expired account activate token"), null);
+          return done(
+            new Error("Invalid or expired account activate token"),
+            null
+          );
         }
 
         const isValid = await bcrypt.compare(token, accountActivateToken.token);
 
         if (!isValid) {
-          done(new Error("Invalid or expired account activate token"), null);
+          return done(
+            new Error("Invalid or expired account activate token"),
+            null
+          );
         }
 
         const activatedUser = await LocalUser.findByIdAndUpdate(
@@ -120,10 +125,10 @@ export default passport.use(
 
         console.log(activatedUser);
 
-        done(null, activatedUser);
+        return done(null, activatedUser);
       } catch (error) {
         console.error(error);
-        done(error, null);
+        return done(error, null);
       }
     }
   )

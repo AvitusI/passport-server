@@ -64,11 +64,11 @@ app.use(routes);
 // The request handler function is called by serializeUser
 app.post("/api/auth", passport.authenticate("local"), (request, response) => {
   try {
-    response.status(200).json(request.user);
-    //response.redirect(`${process.env.CLIENT_URL}/feed`);
     console.log(`Inside /auth endpoint`);
+    return response.status(200).json(request.user);
+    //response.redirect(`${process.env.CLIENT_URL}/feed`);
   } catch (error) {
-    response.status(400).json(error); // not reachable
+    return response.status(400).json(error); // not reachable
   }
 });
 
@@ -126,9 +126,21 @@ await Notification.watch().on("change", async (data) => {
     try {
       // Fetch the full post document with the author populated
       const notification = await Notification.findById(notificationId)
+        .populate("userId", "-password")
+        .populate("commentId")
+        .populate("followerId")
         .populate("likerId")
         .populate("commenterId")
-        .populate("followerId");
+        .populate("replierId")
+        .populate({
+          path: "replyId",
+          populate: [
+            {
+              path: "commentId",
+            },
+          ],
+        })
+        .sort({ createdAt: -1 });
 
       if (notification) {
         myNotification = notification;
@@ -155,7 +167,6 @@ io.on("connection", (socket) => {
 
   socket.on("join_notifications", (userId) => {
     socket.join(userId);
-    console.log(`User joined notifications ${userId}`);
   });
 
   socket.on("new_notification", () => {

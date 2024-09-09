@@ -41,16 +41,18 @@ export default passport.use(
           throw new Error("Email and password are required");
         }
         const findUser = await User.findOne({ email, active: true });
-        if (!findUser) throw new Error("User not found");
+        if (!findUser) {
+          throw new Error("User not found");
+        }
 
         if (!comparePassword(pwd, findUser.password))
           throw new Error("Bad credentials");
 
         // let's get rid of the password
         const { password, ...safeUser } = findUser.toObject();
-        done(null, safeUser);
+        return done(null, safeUser);
       } catch (error) {
-        done(error, null);
+        return done(error, null);
       }
     }
   )

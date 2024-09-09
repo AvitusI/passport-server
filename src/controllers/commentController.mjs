@@ -318,6 +318,58 @@ export const replyComment = asyncHandler(async (request, response) => {
   }
 });
 
+export const likeReply = asyncHandler(async (request, response) => {
+  if (!request.user) {
+    return response.status(401).json({ message: "Unauthorized" });
+  }
+
+  const { replyId } = request.body;
+
+  try {
+    const reply = await Reply.findByIdAndUpdate(
+      replyId,
+      {
+        $addToSet: { likes: request.user.id },
+      },
+      { new: true }
+    );
+
+    if (!reply) {
+      return response.status(404).json({ message: "Reply not found" });
+    }
+
+    return response.sendStatus(200);
+  } catch (error) {
+    throw new Error(error);
+  }
+});
+
+export const unlikeReply = asyncHandler(async (request, response) => {
+  if (!request.user) {
+    return response.status(401).json({ message: "Unauthorized" });
+  }
+
+  const { replyId } = request.body;
+
+  try {
+    const reply = await Reply.findByIdAndUpdate(
+      replyId,
+      {
+        $pull: { likes: request.user.id },
+      },
+      { new: true }
+    );
+
+    if (!reply) {
+      return response.status(404).json({ message: "Reply not found" });
+    }
+
+    return response.sendStatus(200);
+  } catch (error) {
+    throw new Error(error);
+  }
+});
+
 export const deleteReply = asyncHandler(async (request, response) => {
   if (!request.user) {
     return response.status(400).json({ message: "Unauthorized" });
@@ -365,6 +417,7 @@ export const allReplies = asyncHandler(async (request, response) => {
     const comment = await Reply.find({ commentId })
       .populate("userId", "-password")
       .populate("likes", "-password")
+      .populate("commentId")
       .sort({ createdAt: -1 });
 
     return response.status(200).json(comment);

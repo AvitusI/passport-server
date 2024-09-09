@@ -19,7 +19,17 @@ export const allNotification = asyncHandler(async (request, response) => {
       .populate("commentId")
       .populate("followerId")
       .populate("likerId")
-      .populate("commenterId");
+      .populate("commenterId")
+      .populate("replierId")
+      .populate({
+        path: "replyId",
+        populate: [
+          {
+            path: "commentId",
+          },
+        ],
+      })
+      .sort({ createdAt: -1 });
 
     return response.status(200).json(notifications);
   } catch (error) {
@@ -36,10 +46,20 @@ export const allNotificationMixed = asyncHandler(async (request, response) => {
 
   try {
     const notifications = await Notification.find({ userId })
+      .populate("userId", "-password")
       .populate("commentId")
       .populate("followerId")
       .populate("likerId")
       .populate("commenterId")
+      .populate("replierId")
+      .populate({
+        path: "replyId",
+        populate: [
+          {
+            path: "commentId",
+          },
+        ],
+      })
       .sort({ read: 1 });
 
     return response.status(200).json(notifications);

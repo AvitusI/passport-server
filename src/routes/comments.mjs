@@ -10,6 +10,8 @@ import {
   unlikeComment,
   getCommentsByUser,
   replyComment,
+  likeReply,
+  unlikeReply,
   deleteReply,
   allReplies,
 } from "../controllers/commentController.mjs";
@@ -26,6 +28,8 @@ router.post("/api/comments/like", likeComment);
 router.post("/api/comments/unlike", unlikeComment);
 
 router.post("/api/comments/reply", replyComment);
+router.post("/api/reply/like", likeReply);
+router.post("/api/reply/unlike", unlikeReply);
 router.delete("/api/reply/delete", deleteReply);
 router.get("/api/comments/replies/:commentId", allReplies);
 
