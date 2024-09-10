@@ -39,7 +39,7 @@ export const allNotification = asyncHandler(async (request, response) => {
 
 export const allNotificationMixed = asyncHandler(async (request, response) => {
   if (!request.user) {
-    return response.status(400).json({ message: "Unauthorized " });
+    return response.status(401).json({ message: "Unauthorized" });
   }
 
   const { userId } = request.params;
@@ -121,7 +121,7 @@ export const markAllAsRead = asyncHandler(async (request, response) => {
 
     return response.sendStatus(200);
   } catch (error) {
-    return response.sendStatus(400);
+    throw new Error(error);
   }
 });
 
@@ -137,7 +137,7 @@ export const allMessageNotification = asyncHandler(
       const notifications = await messageNotification
         .find({ userId, read: false })
         .populate("messageId")
-        .populate("senderId");
+        .populate("senderId", "-password");
 
       return response.status(200).json(notifications);
     } catch (error) {
@@ -158,7 +158,7 @@ export const allMessageNotificationMixture = asyncHandler(
       const notifications = await messageNotification
         .find({ userId })
         .populate("messageId")
-        .populate("senderId");
+        .populate("senderId", "-password");
 
       return response.status(200).json(notifications);
     } catch (error) {
@@ -203,3 +203,28 @@ export const messageRead = asyncHandler(async (request, response) => {
     return response.sendStatus(400);
   }
 });
+
+export const allMessageNotificationRead = asyncHandler(
+  async (request, response) => {
+    if (!request.user) {
+      return response.status(401).json({ message: "Unauthorised" });
+    }
+
+    const { userId } = request.body;
+
+    try {
+      await messageNotification.updateMany(
+        { userId },
+        {
+          $set: {
+            read: true,
+          },
+        }
+      );
+
+      return response.sendStatus(200);
+    } catch (error) {
+      throw new Error(error);
+    }
+  }
+);

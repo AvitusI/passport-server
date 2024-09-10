@@ -251,14 +251,16 @@ export const likePost = asyncHandler(async (request, response) => {
       return response.status(404).json({ message: "Post not found" });
     }
 
-    const notification = new LikePostNotification({
-      userId: post.author,
-      message: `${request.user.username} liked your post`,
-      postId: post._id,
-      likerId: request.user._id,
-    });
+    if (post.author.toString() !== request.user._id.toString()) {
+      const notification = new LikePostNotification({
+        userId: post.author,
+        message: `${request.user.username} liked your post`,
+        postId: post._id,
+        likerId: request.user._id,
+      });
 
-    await notification.save();
+      await notification.save();
+    }
 
     return response.sendStatus(200);
   } catch (error) {

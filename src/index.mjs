@@ -19,6 +19,7 @@ import "./strategies/github-strategy.mjs";
 import "./strategies/google-strategy.mjs";
 import errorHandler from "./middleware/errorMiddleware.mjs";
 import { Notification } from "./mongoose/schemas/notifications.mjs";
+import { messageNotification } from "./mongoose/schemas/messageNotification.mjs";
 
 //import passport from "./utils/passport-setup.mjs";
 
@@ -64,7 +65,6 @@ app.use(routes);
 // The request handler function is called by serializeUser
 app.post("/api/auth", passport.authenticate("local"), (request, response) => {
   try {
-    console.log(`Inside /auth endpoint`);
     return response.status(200).json(request.user);
     //response.redirect(`${process.env.CLIENT_URL}/feed`);
   } catch (error) {
@@ -74,7 +74,6 @@ app.post("/api/auth", passport.authenticate("local"), (request, response) => {
 
 // modify this endpoint, it sends back the password
 app.get("/api/auth/status", (request, response) => {
-  console.log(`Inside /auth/status endpoint`);
   return request.user ? response.json(request.user) : response.sendStatus(401);
 });
 
@@ -139,12 +138,27 @@ await Notification.watch().on("change", async (data) => {
               path: "commentId",
             },
           ],
-        })
-        .sort({ createdAt: -1 });
+        });
 
-      if (notification) {
-        myNotification = notification;
-      }
+      myNotification = notification;
+    } catch (error) {
+      console.error("Error fetching or populating post:", error);
+    }
+  }
+});
+
+await messageNotification.watch().on("change", async (data) => {
+  if (data.operationType === "insert") {
+    const notificationId = data.documentKey._id;
+
+    try {
+      // Fetch the full post document with the author populated
+      const notification = await messageNotification
+        .findById(notificationId)
+        .populate("messageId")
+        .populate("senderId", "-password");
+
+      myNotification = notification;
     } catch (error) {
       console.error("Error fetching or populating post:", error);
     }

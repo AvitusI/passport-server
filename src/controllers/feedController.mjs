@@ -8,7 +8,7 @@ export const getUserFeed = asyncHandler(async (request, response) => {
   }
 
   const page = parseInt(request.query.page) || 1;
-  const limit = parseInt(request.query.limit) || 5;
+  const limit = parseInt(request.query.limit) || 7;
 
   try {
     const userFeed = await UserFeed.findOne({

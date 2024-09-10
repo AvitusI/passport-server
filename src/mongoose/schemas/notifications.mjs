@@ -111,3 +111,24 @@ export const CommentNotification = Notification.discriminator(
     },
   })
 );
+
+export const ReplyNotification = Notification.discriminator(
+  "ReplyNotification",
+  new mongoose.Schema({
+    commentId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Comment",
+      required: true,
+    },
+    replyId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Reply",
+      required: true,
+    },
+    replierId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+  })
+);

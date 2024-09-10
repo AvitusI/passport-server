@@ -6,6 +6,8 @@ import { Reply } from "../mongoose/schemas/reply.mjs";
 import {
   CommentNotification,
   LikeCommentNotification,
+  ReplyNotification,
+  LikeReplyNotification,
 } from "../mongoose/schemas/notifications.mjs";
 
 export const createComment = asyncHandler(async (request, response) => {
@@ -231,14 +233,16 @@ export const likeComment = asyncHandler(async (request, response) => {
       .populate("userId", "-password")
       .populate("likes", "-password");
 
-    const notification = new LikeCommentNotification({
-      userId: likedComment.userId.id,
-      message: `${request.user.username} liked your comment`,
-      commentId: likedComment.id,
-      likerId: request.user.id,
-    });
+    if (request.user.id.toString() !== likedComment.userId.id.toString()) {
+      const notification = new LikeCommentNotification({
+        userId: likedComment.userId.id,
+        message: `${request.user.username} liked your comment`,
+        commentId: likedComment.id,
+        likerId: request.user.id,
+      });
 
-    await notification.save();
+      await notification.save();
+    }
 
     return response.sendStatus(200);
   } catch (error) {
@@ -311,6 +315,18 @@ export const replyComment = asyncHandler(async (request, response) => {
       { new: true }
     );
 
+    if (comment.userId.toString() !== request.user._id.toString()) {
+      const notification = new ReplyNotification({
+        userId: comment.userId,
+        message: `${request.user.username} replied to your comment`,
+        commentId,
+        replyId: savedReply._id,
+        replierId: request.user._id,
+      });
+
+      await notification.save();
+    }
+
     return response.status(200).json(savedReply);
   } catch (error) {
     console.log(error);
@@ -336,6 +352,17 @@ export const likeReply = asyncHandler(async (request, response) => {
 
     if (!reply) {
       return response.status(404).json({ message: "Reply not found" });
+    }
+
+    if (request.user.id.toString() !== reply.userId.toString()) {
+      const notification = new LikeReplyNotification({
+        userId: reply.userId,
+        message: `${request.user.username} liked your reply`,
+        replyId: reply._id,
+        likerId: request.user.id,
+      });
+
+      await notification.save();
     }
 
     return response.sendStatus(200);
