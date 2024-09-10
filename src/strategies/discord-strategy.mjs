@@ -16,7 +16,6 @@ export default passport.use(
     },
     async (accessToken, refreshToken, profile, done) => {
       let findUser;
-      console.log(profile);
       try {
         findUser = await DiscordUser.findOne({ discordId: profile.id });
       } catch (err) {
@@ -38,7 +37,6 @@ export default passport.use(
 
         return done(null, findUser);
       } catch (err) {
-        console.log(err);
         return done(err, null);
       }
     }

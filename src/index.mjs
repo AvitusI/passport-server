@@ -45,7 +45,7 @@ app.use(cookieParser("helloworld"));
 app.use(fileUpload());
 app.use(
   session({
-    secret: "avitus the dev", // make it not guessable
+    secret: process.env.SESSION_SECRET, // make it not guessable
     saveUninitialized: false, // not saving unmodified sessions data to the store
     resave: false, // resaves the session in session store per request
     cookie: {
@@ -90,7 +90,6 @@ app.get(
   "/api/auth/discord/redirect",
   passport.authenticate("discord"),
   (request, response) => {
-    console.log(request.session);
     response.redirect(`${process.env.CLIENT_URL}/feed`);
   }
 );
@@ -177,34 +176,24 @@ const io = new Server(server, {
 });
 
 io.on("connection", (socket) => {
-  console.log(`User connected ${socket.id}`);
-
   socket.on("join_notifications", (userId) => {
     socket.join(userId);
   });
 
   socket.on("new_notification", () => {
     if (myNotification) {
-      console.log(`User ID: ${myNotification.userId.toString()}`);
       socket
         .to(myNotification.userId.toString())
         .emit("notification", myNotification);
-    } else {
-      console.log("Notification waiting");
     }
   });
 
   socket.on("join_chat", (chatId) => {
     socket.join(chatId);
-    console.log(`User joined chat ${chatId}`);
   });
 
   socket.on("send_message", (message) => {
     socket.to(message.chatId).emit("receive_message", message);
-  });
-
-  socket.on("disconnect", () => {
-    console.log("user disconnected");
   });
 });
 

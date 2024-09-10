@@ -18,6 +18,15 @@ export const registerUser = asyncHandler(async (request, response) => {
   const { body } = request;
 
   try {
+    const userByName = await User.findOne({
+      username: body.username,
+      active: true,
+    });
+
+    if (userByName) {
+      return response.status(400).json({ message: "Username already exist" });
+    }
+
     const user = await User.findOne({ email: body.email, active: true });
 
     if (user) {
@@ -115,6 +124,16 @@ export const editProfile = asyncHandler(async (request, response) => {
   }
 
   try {
+    if (request.body.username) {
+      const userByUsername = await User.findOne({
+        username: request.body.username,
+      });
+
+      if (userByUsername) {
+        return response.status(400).json({ message: "Username already exist" });
+      }
+    }
+
     const user = await User.findByIdAndUpdate(
       userId,
       {

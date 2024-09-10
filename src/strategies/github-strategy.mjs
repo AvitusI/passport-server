@@ -15,7 +15,6 @@ export default passport.use(
       scope: ["read:user"],
     },
     async (accessToken, refreshToken, profile, done) => {
-      console.log(profile);
       let findUser;
 
       try {

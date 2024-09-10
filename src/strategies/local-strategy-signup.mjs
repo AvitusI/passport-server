@@ -73,9 +73,6 @@ export default passport.use(
       passReqToCallback: true,
     },
     async (request, userId, token, done) => {
-      //const { userId, token } = request.body;
-      console.log(request.body);
-
       if (!userId || !token) {
         return done(new Error("ID and token required"), null);
       }
@@ -123,11 +120,8 @@ export default passport.use(
 
         await accountActivateToken.deleteOne();
 
-        console.log(activatedUser);
-
         return done(null, activatedUser);
       } catch (error) {
-        console.error(error);
         return done(error, null);
       }
     }
