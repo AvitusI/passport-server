@@ -9,9 +9,9 @@ dotenv.config();
 export default passport.use(
   new Strategy(
     {
-      clientID: process.env.DiscordClientId,
-      clientSecret: process.env.DiscordClientSecret,
-      callbackURL: process.env.DiscordRedirectUrl,
+      clientID: process.env.DISCORD_CLIENT_ID,
+      clientSecret: process.env.DISCORD_CLIENT_SECRET,
+      callbackURL: process.env.DISCORD_REDIRECT_URL,
       scope: ["identify"],
     },
     async (accessToken, refreshToken, profile, done) => {

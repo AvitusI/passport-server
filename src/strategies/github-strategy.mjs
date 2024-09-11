@@ -9,9 +9,9 @@ dotenv.config();
 export default passport.use(
   new Strategy(
     {
-      clientID: process.env.GithubClientId,
-      clientSecret: process.env.GithubClientSecret,
-      callbackURL: process.env.GithubRedirectUrl,
+      clientID: process.env.GITHUB_CLIENT_ID,
+      clientSecret: process.env.GITHUB_CLIENT_SECRET,
+      callbackURL: process.env.GITHUB_REDIRECT_URL,
       scope: ["read:user"],
     },
     async (accessToken, refreshToken, profile, done) => {

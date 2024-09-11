@@ -77,11 +77,22 @@ app.get("/api/auth/status", (request, response) => {
   return request.user ? response.json(request.user) : response.sendStatus(401);
 });
 
+// logout modified
 app.post("/api/auth/logout", (request, response) => {
-  if (!request.user) return response.sendStatus(401);
+  if (!request.user) {
+    return response.sendStatus(401); // Send a 401 if the user is not authenticated
+  }
+
   request.logout((err) => {
-    if (err) return response.sendStatus(400);
-    response.sendStatus(200);
+    if (err) {
+      if (!response.headersSent) {
+        return response.sendStatus(400); // Error during logout, send a 400 if headers aren't already sent
+      }
+    }
+
+    if (!response.headersSent) {
+      return response.sendStatus(200); // Successful logout, send 200 if headers aren't already sent
+    }
   });
 });
 

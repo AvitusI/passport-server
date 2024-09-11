@@ -9,9 +9,9 @@ dotenv.config();
 export default passport.use(
   new Strategy(
     {
-      clientID: process.env.GoogleClientId,
-      clientSecret: process.env.GoogleClientSecret,
-      callbackURL: process.env.GoogleRedirectUrl,
+      clientID: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      callbackURL: process.env.GOOGLE_REDIRECT_URL,
       scope: ["profile", "email"],
     },
     async (accessToken, refreshToken, profile, done) => {
