@@ -52,6 +52,7 @@ app.use(
       maxAge: 60000 * 60 * 24,
       sameSite: "none",
       secure: true,
+      httpOnly: true,
     },
     store: MongoStore.create({
       client: mongoose.connection.getClient(),
