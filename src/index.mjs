@@ -57,6 +57,7 @@ app.use(
       secure: true,
       httpOnly: true,
       partitioned: true,
+      domain: "shownext1-7sh63dv9.b4a.run",
     },
     store: MongoStore.create({
       client: mongoose.connection.getClient(),
