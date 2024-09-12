@@ -56,10 +56,12 @@ app.use(
       sameSite: "none",
       secure: true,
       httpOnly: true,
+      partitioned: true,
     },
     store: MongoStore.create({
       client: mongoose.connection.getClient(),
     }),
+    proxy: true,
   })
 );
 
