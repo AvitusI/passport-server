@@ -64,6 +64,8 @@ app.use(
 app.use(passport.initialize()); // Initialize passport after session
 app.use(passport.session()); // Since we are using session, we need to use passport.session() to keep track of the user's session
 
+app.set("trust proxy", 1);
+
 app.use(routes);
 
 // The request handler function is called by serializeUser
