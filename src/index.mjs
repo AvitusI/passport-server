@@ -50,10 +50,10 @@ app.use(
     resave: false, // resaves the session in session store per request
     cookie: {
       maxAge: 60000 * 60 * 24,
-      sameSite: "none",
+      sameSite: "None",
       secure: true,
       httpOnly: true,
-      partitioned: true,
+      //  partitioned: true,
     },
     store: MongoStore.create({
       client: mongoose.connection.getClient(),
