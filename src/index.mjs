@@ -30,7 +30,7 @@ const app = express();
 // mongodb://localhost/express-tutorial
 
 mongoose
-  .connect(process.env.MongoDB_URL)
+  .connect(process.env.MONGODB_URL)
   .then(() => console.log("MongoDB Connected"))
   .catch((err) => console.log(err));
 
