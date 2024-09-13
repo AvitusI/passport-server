@@ -42,7 +42,7 @@ app.use(
     credentials: true,
   })
 );
-app.use(cookieParser("helloworld"));
+app.use(cookieParser());
 app.use(fileUpload());
 app.use(
   session({
