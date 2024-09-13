@@ -180,7 +180,6 @@ await messageNotification.watch().on("change", async (data) => {
 
 app.use(errorHandler);
 
-/*
 const server = http.createServer(app);
 
 const io = new Server(server, {
@@ -217,10 +216,6 @@ const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
   console.log(`Running on Port ${PORT}`);
 });
-
-*/
-
-const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
   console.log(`Running on Port ${PORT}`);
