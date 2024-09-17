@@ -66,8 +66,6 @@ app.use(routes);
 // The request handler function is called by serializeUser
 app.post("/api/auth", passport.authenticate("local"), (request, response) => {
   try {
-    request.session.cookie.sameSite = "none";
-    request.session.cookie.secure = true;
     return response.status(200).json(request.user);
     //response.redirect(`${process.env.CLIENT_URL}/feed`);
   } catch (error) {
